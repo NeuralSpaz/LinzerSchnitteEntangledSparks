@@ -101,7 +101,7 @@ int main(int argc, char**argv)
 					if (recvlen >= 0) {
 							buf[recvlen] = 0;
 							acktime=processData(buf,recvlen);
-							fprintf(stderr, "Latency=%lf", acktime-timenow);
+							fprintf(stderr, "Latency=%lf\n", acktime-timenow);
 					}
 
 
