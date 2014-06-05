@@ -77,7 +77,7 @@ int main(int argc, char**argv)
 	short shiftleft3=1;
 	short shiftleft4=1;
 	double timenow;
-	double acktime;
+	//double acktime;
 	//double roundtriptime;
 	while(1)
 	{
@@ -100,8 +100,8 @@ int main(int argc, char**argv)
 			recvlen = recvfrom(fd, buf, BUFFERSIZE, 0, (struct sockaddr *)&remaddr, (socklen_t *)&slen);
 					if (recvlen >= 0) {
 							buf[recvlen] = 0;
-							acktime=processData(buf,recvlen);
-							fprintf(stderr, "Latency=%lf\n", acktime-timenow);
+							processData(buf,recvlen);
+							fprintf(stderr, "Latency=%lf\n", (getTime()-timenow/2) );
 					}
 
 
