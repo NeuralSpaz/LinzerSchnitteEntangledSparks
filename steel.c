@@ -64,7 +64,7 @@ int main(int argc, char **argv)
 	sleep(1);
 	LS_CMD(10,0xffff,0);
 	sleep(1);
-	RDS_CONFIG()
+	RDS_CONFIG();
 	sleep(1);
 	
 	if ((fd = socket(AF_INET, SOCK_DGRAM, 0)) < 0) {

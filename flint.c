@@ -74,8 +74,8 @@ int main(int argc, char**argv)
 	}
 	short shiftleft1=1;
 	short shiftleft2=1;
-	short shiftleft3=1;
-	short shiftleft4=1;
+//	short shiftleft3=1;
+//	short shiftleft4=1;
 	double timenow;
 	//double acktime;
 	//double roundtriptime;
@@ -114,7 +114,7 @@ int main(int argc, char**argv)
 		if (shiftleft2==1) {data02 <<= 1;}
 		if (shiftleft2==0) {data02 >>= 1;}
 		if (data02 == 0X00000001) {shiftleft2=1;}
-
+/*
 		if (data03 == 0X80000000){ shiftleft3=0; }
 		if (shiftleft3==1) {data03 <<= 1;}
 		if (shiftleft3==0) {data03 >>= 1;}
@@ -124,7 +124,7 @@ int main(int argc, char**argv)
 		if (shiftleft4==1) {data04 <<= 1;}
 		if (shiftleft4==0) {data04 >>= 1;}
 		if (data04 == 0X00000001) {shiftleft4=1;}
-
+*/
 		usleep(1000*delay);
 
 		}

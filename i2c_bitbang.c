@@ -249,5 +249,6 @@ void LS_RAW ( int command, uint32_t data )
   i2c_write_byte( 0,0,D0);
   i2c_write_byte( 0,0,D1);
   i2c_write_byte( 0,1,0x01);
+  usleep(90000);
 }
 

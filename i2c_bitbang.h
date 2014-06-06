@@ -9,6 +9,6 @@
 
 extern void LS_CMD ( int , int , int );
 extern void LS_RAW ( int , uint32_t);
-
+extern void RDS_CONFIG ();
 
 #endif
