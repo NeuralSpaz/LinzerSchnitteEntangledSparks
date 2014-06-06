@@ -37,15 +37,19 @@ double processData(char *message, int messageLength);
 
 int main(int argc, char**argv)
 {
-	fprintf(stderr, "Flint: Contoller for Entagngled Sparks\n");
-	fprintf(stderr, "Version %1.2f <josh@zool.com> use -h for help\n\n", version);
+	fprintf(stderr, "Flint:Entangled Sparks: Frame Contoller for Entagngled Sparks Version %1.2f\n", version);
+	fprintf(stderr, "Copyright (C)2014 Josh Gardiner josh@zool.com\n");
+	fprintf(stderr, "\nThis program comes with ABSOLUTELY NO WARRANTY; for details type -w'\n");
+	fprintf(stderr, "This is free software, and you are welcome to redistribute it\n");
+	fprintf(stderr, "under certain conditions; type -c for details.\n");
+	fprintf(stderr, "\ntype -h for help\n\n");
 
 	int cmd_option;
 	int port = 1535;
 	char *server = "127.0.0.1";
 	int delay = 1000;
 
-	while((cmd_option=getopt(argc, argv, "hp:s:t:")) != EOF)
+	while((cmd_option=getopt(argc, argv, "hp:s:t:wc")) != EOF)
 	switch(cmd_option)
 	{
 		default:
@@ -53,6 +57,8 @@ int main(int argc, char**argv)
 		case 'p': port=atoi(optarg); break;
 		case 's': server=(optarg); break;
 		case 't': delay=atoi(optarg); break;
+		case 'w': print_warranty();
+		case 'c': print_conditions();
 	}
 
 	struct sockaddr_in myaddr;

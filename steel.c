@@ -3,18 +3,18 @@
 //2014 06 05
 //Copyright (C) Josh Gardiner 2014
 /*
-    This program is free software: you can redistribute it and/or modify
-    it under the terms of the GNU General Public License as published by
-    the Free Software Foundation, either version 3 of the License, or
-    (at your option) any later version.
+	This program is free software: you can redistribute it and/or modify
+	it under the terms of the GNU General Public License as published by
+	the Free Software Foundation, either version 3 of the License, or
+	(at your option) any later version.
 
-    This program is distributed in the hope that it will be useful,
-    but WITHOUT ANY WARRANTY; without even the implied warranty of
-    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-    GNU General Public License for more details.
+	This program is distributed in the hope that it will be useful,
+	but WITHOUT ANY WARRANTY; without even the implied warranty of
+	MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+	GNU General Public License for more details.
 
-    You should have received a copy of the GNU General Public License
-    along with this program.  If not, see <http://www.gnu.org/licenses/>.
+	You should have received a copy of the GNU General Public License
+	along with this program.  If not, see <http://www.gnu.org/licenses/>.
 */
 
 #include <stdlib.h>
@@ -47,18 +47,25 @@ void sendRDS();
 
 int main(int argc, char **argv)
 {
-	fprintf(stderr, "Flint: Contoller for Entagngled Sparks\n");
-	fprintf(stderr, "Version %1.2f <josh@zool.com> use -h for help\n\n", version);
+	fprintf(stderr, "Steel:Entangled Sparks: FM Transmitter Contoller for Entagngled Sparks Version %1.2f\n", version);
+	fprintf(stderr, "Copyright (C)2014 Josh Gardiner josh@zool.com\n");
+	fprintf(stderr, "\nThis program comes with ABSOLUTELY NO WARRANTY; for details type -w\n");
+	fprintf(stderr, "This is free software, and you are welcome to redistribute it\n");
+	fprintf(stderr, "under certain conditions; type -c for details.\n");
+	fprintf(stderr, "\ntype -h for help\n\n");
+
 
 	int cmd_option;
 	int port = 1535;
 
-	while((cmd_option=getopt(argc, argv, "hp:")) != EOF)
+	while((cmd_option=getopt(argc, argv, "hp:wc")) != EOF)
 	switch(cmd_option)
 	{
 		default:
-		case 'h': print_flint_help();
+		case 'h': print_steel_help(); 
 		case 'p': port=atoi(optarg); break;
+		case 'w': print_warranty();
+		case 'c': print_conditions();
 	}
 
 	struct sockaddr_in myaddr;
@@ -71,8 +78,8 @@ int main(int argc, char **argv)
 
 	if (gpioSetup() != OK)
 	{
-	        dbgPrint(DBG_INFO, "gpioSetup failed. Exiting\n");
-        	return 1;
+			dbgPrint(DBG_INFO, "gpioSetup failed. Exiting\n");
+			return 1;
 	}
 
 	LS_CMD(10,0xffff,0);
