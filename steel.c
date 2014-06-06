@@ -64,7 +64,9 @@ int main(int argc, char **argv)
 	sleep(1);
 	LS_CMD(10,0xffff,0);
 	sleep(1);
-
+	RDS_CONFIG()
+	sleep(1);
+	
 	if ((fd = socket(AF_INET, SOCK_DGRAM, 0)) < 0) {
 		perror("cannot create socket\n");
 		return 0;
@@ -90,8 +92,9 @@ int main(int argc, char **argv)
 			processData(buf,recvlen);
 			sendRDS();
 		}
-		else
+		else {
 			printf("uh oh - something went wrong!\n");
+		}
 		sprintf(buf, "FRAMEID=%d\n%6.6f\n", frameid, getTime());
 		printf("sending response %s", buf);
 		if (sendto(fd, buf, strlen(buf), 0, (struct sockaddr *)&remaddr, addrlen) < 0)
