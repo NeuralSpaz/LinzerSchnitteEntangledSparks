@@ -26,7 +26,7 @@ int main(int argc, char**argv)
 	fprintf(stderr, "Version %1.2f <josh@zool.com> use -h for help\n\n", version);
 
 	int cmd_option;
-	int port = 21234;
+	int port = 1535;
 	char *server = "127.0.0.1";
 	int delay = 1000;
 

@@ -36,7 +36,7 @@ int main(int argc, char **argv)
 	fprintf(stderr, "Version %1.2f <josh@zool.com> use -h for help\n\n", version);
 
 	int cmd_option;
-	int port = 21234;
+	int port = 1535;
 
 	while((cmd_option=getopt(argc, argv, "hp:")) != EOF)
 	switch(cmd_option)
