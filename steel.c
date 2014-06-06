@@ -54,6 +54,17 @@ int main(int argc, char **argv)
 
 	char buf[BUFSIZE];
 
+	if (gpioSetup() != OK)
+	{
+	        dbgPrint(DBG_INFO, "gpioSetup failed. Exiting\n");
+        	return 1;
+	}
+
+	LS_CMD(10,0xffff,0);
+	sleep(1);
+	LS_CMD(10,0xffff,0);
+	sleep(1);
+
 	if ((fd = socket(AF_INET, SOCK_DGRAM, 0)) < 0) {
 		perror("cannot create socket\n");
 		return 0;
@@ -73,7 +84,7 @@ int main(int argc, char **argv)
 
 	for (;;) {
 		recvlen = recvfrom(fd, buf, BUFSIZE, 0, (struct sockaddr *)&remaddr, &addrlen);
-		system("clear");
+		// system("clear");
 		if (recvlen > 0) {
 			buf[recvlen] = 0;
 			processData(buf,recvlen);
@@ -148,7 +159,7 @@ void processData(char *message, int messageLength)
 void sendRDS()
 {
 	if(data01!=last_data01) {LS_RAW((int)20,(uint32_t)data01); last_data01=data01; fprintf(stderr,"CMD 20 %08X\n",data01);}
-	if(data01!=last_data01) {LS_RAW((int)21,(uint32_t)data02); last_data02=data02; fprintf(stderr,"CMD 21 %08X\n",data02);}
-	if(data01!=last_data01) {LS_RAW((int)22,(uint32_t)data03); last_data03=data03; fprintf(stderr,"CMD 22 %08X\n",data03);}
-	if(data01!=last_data01) {LS_RAW((int)23,(uint32_t)data04); last_data04=data04; fprintf(stderr,"CMD 23 %08X\n",data04);}
+	if(data02!=last_data02) {LS_RAW((int)21,(uint32_t)data02); last_data02=data02; fprintf(stderr,"CMD 21 %08X\n",data02);}
+	if(data03!=last_data03) {LS_RAW((int)22,(uint32_t)data03); last_data03=data03; fprintf(stderr,"CMD 22 %08X\n",data03);}
+	if(data04!=last_data04) {LS_RAW((int)23,(uint32_t)data04); last_data04=data04; fprintf(stderr,"CMD 23 %08X\n",data04);}
 }
