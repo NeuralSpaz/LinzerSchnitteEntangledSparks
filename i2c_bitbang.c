@@ -193,6 +193,20 @@ void help ( void )
 
 #define version "0.001 Beta" 
 
+void RDS_CONFIG() 
+{
+
+// disables Radio Text
+  i2c_write_byte( 1,0,RDS_CHIP_WRITE);
+  i2c_write_byte( 0,0,0x1f);
+  i2c_write_byte( 0,1,0);
+
+// display Dynamic Program Service Text once only
+  i2c_write_byte( 1,0,RDS_CHIP_WRITE);
+  i2c_write_byte( 0,0,0x72);
+  i2c_write_byte( 0,1,0xff);
+}
+
 void LS_CMD ( int command, int address, int data ) 
 {
 	unsigned char B0,B1,C0,C1,D0,D1;
