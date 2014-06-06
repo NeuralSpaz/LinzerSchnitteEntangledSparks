@@ -11,6 +11,7 @@
 #include <assert.h>
 #include "sparkfunc.h"
 #include <unistd.h>
+#include "i2c_bitbang.h"
 
 #define BUFSIZE 2048
 float version = 1.00;
@@ -20,9 +21,14 @@ uint32_t data01 = 0;
 uint32_t data02 = 0;
 uint32_t data03 = 0;
 uint32_t data04 = 0;
+uint32_t last_data01 = 0;
+uint32_t last_data02 = 0;
+uint32_t last_data03 = 0;
+uint32_t last_data04 = 0;
 double timestamp = 0;
 
 void processData(char *message, int messageLength);
+void sendRDS();
 
 int main(int argc, char **argv)
 {
@@ -71,6 +77,7 @@ int main(int argc, char **argv)
 		if (recvlen > 0) {
 			buf[recvlen] = 0;
 			processData(buf,recvlen);
+			sendRDS();
 		}
 		else
 			printf("uh oh - something went wrong!\n");
@@ -112,6 +119,7 @@ void processData(char *message, int messageLength)
 		fprintf(stderr,"%08X = ",data01);
 		printbitssimple(data01);
 		fprintf(stderr,"\n");
+
 	}
 	if (memcmp(DATA02str,"DATA02=",7)==0 ) {
 		data = split(DATA02str,delim);
@@ -137,3 +145,10 @@ void processData(char *message, int messageLength)
 
 }
 
+void sendRDS()
+{
+	if(data01!=last_data01) {LS_RAW((int)20,(uint32_t)data01); last_data01=data01; fprintf(stderr,"CMD 20 %08X\n",data01);}
+	if(data01!=last_data01) {LS_RAW((int)21,(uint32_t)data02); last_data02=data02; fprintf(stderr,"CMD 21 %08X\n",data02);}
+	if(data01!=last_data01) {LS_RAW((int)22,(uint32_t)data03); last_data03=data03; fprintf(stderr,"CMD 22 %08X\n",data03);}
+	if(data01!=last_data01) {LS_RAW((int)23,(uint32_t)data04); last_data04=data04; fprintf(stderr,"CMD 23 %08X\n",data04);}
+}

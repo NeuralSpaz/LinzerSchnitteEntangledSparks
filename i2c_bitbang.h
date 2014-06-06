@@ -8,6 +8,7 @@
 
 
 extern void LS_CMD ( int , int , int );
+extern void LS_RAW ( int , uint32_t);
 
 
 #endif

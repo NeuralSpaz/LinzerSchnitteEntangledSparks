@@ -6,6 +6,7 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
+#include "sparkfunc.h"
 
 void print_flint_help(void)
 {

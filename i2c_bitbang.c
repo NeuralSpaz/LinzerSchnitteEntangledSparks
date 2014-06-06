@@ -22,7 +22,7 @@
 #include <stdio.h>
 #include <unistd.h>
 #include "rpiGpio.h"
-
+#include "i2c_bitbang.h"
 
 // clock speed in Hz
 #define I2CSPEED 1000
@@ -215,5 +215,25 @@ void LS_CMD ( int command, int address, int data )
 	i2c_write_byte( 0,1,0x01);
 }
 	
+void LS_RAW ( int command, uint32_t data ) 
+{
+  unsigned char B0,B1,C0,C1,D0,D1;
 
+  B0 = 0x60;
+  B1 = command & 0x1f;
+  C0 = (data>>24)&0xff;
+  C1 = (data>>16)&0xff;
+  D0 = (data>>8)&0xff;
+  D1 = (data)&0xff;
+
+  i2c_write_byte( 1,0,RDS_CHIP_WRITE);
+  i2c_write_byte( 0,0,0x67);
+  i2c_write_byte( 0,0,B0);
+  i2c_write_byte( 0,0,B1);
+  i2c_write_byte( 0,0,C0);
+  i2c_write_byte( 0,0,C1);
+  i2c_write_byte( 0,0,D0);
+  i2c_write_byte( 0,0,D1);
+  i2c_write_byte( 0,1,0x01);
+}
 
