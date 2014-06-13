@@ -41,6 +41,7 @@ uint32_t last_data02 = 0;
 uint32_t last_data03 = 0;
 uint32_t last_data04 = 0;
 double timestamp = 0;
+int wait=80000;
 
 void processData(char *message, int messageLength);
 void sendRDS();
@@ -58,7 +59,7 @@ int main(int argc, char **argv)
 	int cmd_option;
 	int port = 1535;
 
-	while((cmd_option=getopt(argc, argv, "hp:wc")) != EOF)
+	while((cmd_option=getopt(argc, argv, "hp:wcd:")) != EOF)
 	switch(cmd_option)
 	{
 		default:
@@ -66,6 +67,7 @@ int main(int argc, char **argv)
 		case 'p': port=atoi(optarg); break;
 		case 'w': print_warranty();
 		case 'c': print_conditions();
+		case 'd': wait=atoi(optarg); break;
 	}
 
 	struct sockaddr_in myaddr;
@@ -88,7 +90,12 @@ int main(int argc, char **argv)
 	sleep(1);
 	RDS_CONFIG();
 	sleep(1);
-	
+	RDS_ENABLE_UDG1();
+	sleep(1);
+
+//	RDS_SET_PS();
+//	sleep(1);
+
 	if ((fd = socket(AF_INET, SOCK_DGRAM, 0)) < 0) {
 		perror("cannot create socket\n");
 		return 0;
@@ -133,8 +140,8 @@ void processData(char *message, int messageLength)
 	char FRAMEIDstr[100], TIMESTAMPstr[100], DATA01str[100], DATA02str[100], DATA03str[100], DATA04str[100];
 
 	sscanf(message, "%s %s %s %s %s %s",FRAMEIDstr, TIMESTAMPstr, DATA01str, DATA02str, DATA03str, DATA04str);
-	
-	//fprintf(stderr, "%s\n %s\n %s\n %s\n %s\n %s\n",FRAMEIDstr, TIMESTAMPstr, DATA01str, DATA02str, DATA03str, DATA04str);
+
+	fprintf(stderr, "%s\n %s\n %s\n %s\n %s\n %s\n",FRAMEIDstr, TIMESTAMPstr, DATA01str, DATA02str, DATA03str, DATA04str);
 
 	char *data;
 	const char delim[2] = "=";
@@ -183,8 +190,24 @@ void processData(char *message, int messageLength)
 
 void sendRDS()
 {
-	if(data01!=last_data01) {LS_RAW((int)20,(uint32_t)data01); last_data01=data01; fprintf(stderr,"CMD 20 %08X\n",data01);}
-	if(data02!=last_data02) {LS_RAW((int)21,(uint32_t)data02); last_data02=data02; fprintf(stderr,"CMD 21 %08X\n",data02);}
-	if(data03!=last_data03) {LS_RAW((int)22,(uint32_t)data03); last_data03=data03; fprintf(stderr,"CMD 22 %08X\n",data03);}
-	if(data04!=last_data04) {LS_RAW((int)23,(uint32_t)data04); last_data04=data04; fprintf(stderr,"CMD 23 %08X\n",data04);}
+//	RESEND_LS_RAW2();
+
+//if(data01!=last_data01) {LS_RAW2((int)20,(uint32_t)data01); RESEND_LS_RAW2(); last_data01=data01; fprintf(stderr,"CMD 20 %08X\n",data01);}
+//if(data02!=last_data02) {LS_RAW2((int)21,(uint32_t)data02); RESEND_LS_RAW2(); last_data02=data02; fprintf(stderr,"CMD 21 %08X\n",data02);}
+//if(data03!=last_data03) {LS_RAW2((int)22,(uint32_t)data03); RESEND_LS_RAW2(); last_data03=data03; fprintf(stderr,"CMD 22 %08X\n",data03);}
+//if(data04!=last_data04) {LS_RAW2((int)23,(uint32_t)data04); RESEND_LS_RAW2(); last_data04=data04; fprintf(stderr,"CMD 23 %08X\n",data04);}
+
+if(data01!=last_data01) {LS_RAW2((int)20,(uint32_t)data01,wait); last_data01=data01; fprintf(stderr,"CMD 20 %08X\n",data01);}
+if(data02!=last_data02) {LS_RAW2((int)21,(uint32_t)data02,wait); last_data02=data02; fprintf(stderr,"CMD 21 %08X\n",data02);}
+if(data03!=last_data03) {LS_RAW2((int)22,(uint32_t)data03,wait); last_data03=data03; fprintf(stderr,"CMD 22 %08X\n",data03);}
+if(data04!=last_data04) {LS_RAW2((int)23,(uint32_t)data04,wait); last_data04=data04; fprintf(stderr,"CMD 23 %08X\n",data04);}
+
+//LS_DOUBLE(20,data01,21,data02,wait);
+
+
+//if(data01!=last_data01) {LS_RAW((int)20,(uint32_t)data01); last_data01=data01; fprintf(stderr,"CMD 20 %08X\n",data01);}
+//if(data02!=last_data02) {LS_RAW2((int)21,(uint32_t)data02); last_data02=data02; fprintf(stderr,"CMD 21 %08X\n",data02);}
+//if(data03!=last_data03) {LS_RAW((int)22,(uint32_t)data03); last_data03=data03; fprintf(stderr,"CMD 22 %08X\n",data03);}
+//if(data04!=last_data04) {LS_RAW2((int)23,(uint32_t)data04); last_data04=data04; fprintf(stderr,"CMD 23 %08X\n",data04);}
+
 }

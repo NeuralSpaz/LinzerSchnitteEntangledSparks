@@ -48,22 +48,24 @@ int main(int argc, char**argv)
 	int port = 1535;
 	char *server = "127.0.0.1";
 	int delay = 1000;
+	int testpattern=0;
 
-	while((cmd_option=getopt(argc, argv, "hp:s:t:wc")) != EOF)
+	while((cmd_option=getopt(argc, argv, "hp:s:t:wcr:")) != EOF)
 	switch(cmd_option)
 	{
 		default:
-		case 'h': print_flint_help();
+		case 'h': print_flint_help();break;
 		case 'p': port=atoi(optarg); break;
 		case 's': server=(optarg); break;
 		case 't': delay=atoi(optarg); break;
-		case 'w': print_warranty();
-		case 'c': print_conditions();
+		case 'w': print_warranty();break;
+		case 'c': print_conditions();break;
+		case 'r': testpattern=atoi(optarg);break;
 	}
 
 	struct sockaddr_in myaddr;
 	struct sockaddr_in remaddr;
-	
+
 	int fd;
 	int i;
 	int slen=sizeof(remaddr);
@@ -84,8 +86,8 @@ int main(int argc, char**argv)
 	if (bind(fd, (struct sockaddr *)&myaddr, sizeof(myaddr)) < 0) {
 		perror("bind failed");
 		return 0;
-	}  
-	
+	}
+
    	memset((char *) &remaddr, 0, sizeof(remaddr));
 	remaddr.sin_family = AF_INET;
 	remaddr.sin_port = htons(port);
@@ -95,37 +97,63 @@ int main(int argc, char**argv)
 	}
 	short shiftleft1=1;
 	short shiftleft2=1;
-//	short shiftleft3=1;
-//	short shiftleft4=1;
+	short shiftleft3=1;
+	short shiftleft4=1;
+	uint64_t data01 = 0X00000020;
+	uint64_t data02 = 0X00000040;
+	uint64_t data03 = 0X00000080;
+	uint64_t data04 = 0X00000100;
+
+	if(testpattern==2)
+	{
+		data01 = 0x00000000;
+		data02 = 0x00000000;
+		data03 = 0x00000000;
+		data04 = 0x00000000;
+	}
+
+	if(testpattern==4)
+	{
+		data01 = 0x00000000;
+		data02 = 0x00000000;
+	}
+	if(testpattern==5)
+	{
+		data01 = 0x00000000;
+		data02 = 0x00000001;
+	}
+
+	if(testpattern==3)
+	{
+		data01 = 0xFFFFFFFF;
+	}
+
 	double timenow;
 	//double acktime;
 	//double roundtriptime;
 	while(1)
 	{
-	
-		uint32_t data01 = 0X00000001;
-		uint32_t data02 = 0X00000800;
-		uint32_t data03 = 0X00080000;
-		uint32_t data04 = 0X08000000;
-	
-		for (i=0; data01 < 0xFFFFFFFF; i++) {
+
+
+		for (i=0; i < 1000000 ; i++) {
 			timenow=getTime();
 			printf("Sending Frame %d to %s port %d\n", i, server, port);
-			sprintf(buf, "FRAMEID=%d\nTIMESTAMP=%8.8f\nDATA01=%u\nDATA02=%u\nDATA03=%u\nDATA04=%u\n"
+			sprintf(buf, "FRAMEID=%d\nTIMESTAMP=%8.8f\nDATA01=%llu\nDATA02=%llu\nDATA03=%llu\nDATA04=%llu\n"
 				, i, timenow,data01,data02,data03,data04);
 			if (sendto(fd, buf, strlen(buf), 0, (struct sockaddr *)&remaddr, slen)==-1) {
 				perror("sendto");
 				exit(1);
 			}
-	
+
 			recvlen = recvfrom(fd, buf, BUFFERSIZE, 0, (struct sockaddr *)&remaddr, (socklen_t *)&slen);
 					if (recvlen >= 0) {
 							buf[recvlen] = 0;
 							processData(buf,recvlen);
-							fprintf(stderr, "Latency=%lf\n", ((getTime()-timenow)/2) );
+							fprintf(stderr, "Latency=%lf\n", ((getTime()-timenow)) );
 					}
 
-
+		if(testpattern==1)
+		{
 		if (data01 == 0X80000000){ shiftleft1=0; }
 		if (shiftleft1==1) {data01 <<= 1;}
 		if (shiftleft1==0) {data01 >>= 1;}
@@ -135,7 +163,7 @@ int main(int argc, char**argv)
 		if (shiftleft2==1) {data02 <<= 1;}
 		if (shiftleft2==0) {data02 >>= 1;}
 		if (data02 == 0X00000001) {shiftleft2=1;}
-/*
+
 		if (data03 == 0X80000000){ shiftleft3=0; }
 		if (shiftleft3==1) {data03 <<= 1;}
 		if (shiftleft3==0) {data03 >>= 1;}
@@ -145,7 +173,26 @@ int main(int argc, char**argv)
 		if (shiftleft4==1) {data04 <<= 1;}
 		if (shiftleft4==0) {data04 >>= 1;}
 		if (data04 == 0X00000001) {shiftleft4=1;}
-*/
+		}
+		if(testpattern==2)
+		{
+			data01 ^= 0b00000000000000000000000000000001;
+			data02 ^= 0b00000000000000000000000000000001;
+			data03 ^= 0b00000000000000000000000000000001;
+			data04 ^= 0b00000000000000000000000000000001;
+		}
+
+		if(testpattern==4)
+		{
+			data01 ^= 0b00000000000000000000000000000001;
+			data02 ^= 0b00000000000000000000000000000001;
+		}
+		if(testpattern==5)
+		{
+			//data01 ^= 0b00000000000000000000000000000001;
+			data02 ^= 0b00000000000000000000000000000001;
+		}
+
 		usleep(1000*delay);
 
 		}
@@ -162,7 +209,7 @@ double processData(char *message, int messageLength)
 	double recivedtime;
 
 	sscanf(message, "%s %lf",FRAMEIDstr, &recivedtime);
-	
+
 	//fprintf(stderr, "%s\n %s\n %s\n %s\n %s\n %s\n",FRAMEIDstr, TIMESTAMPstr, DATA01str, DATA02str, DATA03str, DATA04str);
 
 	if (memcmp(FRAMEIDstr,"FRAMEID=",8)==0 ) {

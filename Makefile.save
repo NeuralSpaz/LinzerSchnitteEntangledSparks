@@ -1,6 +1,6 @@
 # build executable
 CC = gcc
-CFLAGS = -Werror
+CFLAGS = -Wall -Werror
 LIBS+=-lm
 LIBS2+= -Igpio/include -Lgpio/library -lrpigpio
 all: steel flint
@@ -22,7 +22,7 @@ steel.o: steel.c sparkfunc.h i2c_bitbang.h
 
 i2c_bitbang.o: i2c_bitbang.c i2c_bitbang.h
 	./make-rPi-GPIO.sh
-	$(CC) $(CFLAGS) -c -o i2c_bitbang.o i2c_bitbang.c $(LIBS2) $(LIBS)
+	$(CC)  -c -o i2c_bitbang.o i2c_bitbang.c $(LIBS2) $(LIBS)
 
 
 clean:

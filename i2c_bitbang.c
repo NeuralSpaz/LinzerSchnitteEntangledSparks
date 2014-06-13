@@ -25,7 +25,7 @@
 #include "i2c_bitbang.h"
 
 // clock speed in Hz
-#define I2CSPEED 1000
+#define I2CSPEED 2500
 #define SCL_PIN 3
 #define SDA_PIN 2 
 
@@ -200,11 +200,12 @@ void RDS_CONFIG()
   i2c_write_byte( 1,0,RDS_CHIP_WRITE);
   i2c_write_byte( 0,0,0x1f);
   i2c_write_byte( 0,1,0);
-
+/*
 // display Dynamic Program Service Text once only
   i2c_write_byte( 1,0,RDS_CHIP_WRITE);
   i2c_write_byte( 0,0,0x72);
   i2c_write_byte( 0,1,0xff);
+*/
 }
 
 void LS_CMD ( int command, int address, int data ) 
@@ -228,8 +229,8 @@ void LS_CMD ( int command, int address, int data )
 	i2c_write_byte( 0,0,D1);
 	i2c_write_byte( 0,1,0x01);
 }
-	
-void LS_RAW ( int command, uint32_t data ) 
+
+void LS_RAW ( int command, uint32_t data, int delay)
 {
   unsigned char B0,B1,C0,C1,D0,D1;
 
@@ -249,6 +250,191 @@ void LS_RAW ( int command, uint32_t data )
   i2c_write_byte( 0,0,D0);
   i2c_write_byte( 0,0,D1);
   i2c_write_byte( 0,1,0x01);
-  usleep(90000);
+  usleep(delay);
+
 }
 
+void LS_RAW2 ( int command, uint32_t data, int delay ) 
+{
+  unsigned char B0,B1,C0,C1,D0,D1;
+
+  B0 = 0x67;
+  B1 = command & 0x1f;
+  C0 = (data>>24)&0xff;
+  C1 = (data>>16)&0xff;
+  D0 = (data>>8)&0xff;
+  D1 = (data)&0xff;
+
+  i2c_write_byte( 1,0,RDS_CHIP_WRITE);
+  i2c_write_byte( 0,0,0x67);
+  i2c_write_byte( 0,0,B0);
+  i2c_write_byte( 0,0,B1);
+  i2c_write_byte( 0,0,C0);
+  i2c_write_byte( 0,0,C1);
+  i2c_write_byte( 0,0,D0);
+  i2c_write_byte( 0,0,D1);
+  i2c_write_byte( 0,1,0x01);
+/*
+  i2c_write_byte( 1,0,RDS_CHIP_WRITE);
+  i2c_write_byte( 0,0,0x6d);
+  i2c_write_byte( 0,0,0x01);
+  i2c_write_byte( 0,1,0x01);
+*/
+  usleep(delay);
+
+}
+
+void RESEND_LS_RAW2()
+{
+  i2c_write_byte( 1,0,RDS_CHIP_WRITE);
+  i2c_write_byte( 0,0,0x6d);
+  i2c_write_byte( 0,0,0x01);
+  i2c_write_byte( 0,1,0x01);
+}
+
+void RDS_SET_PS()
+{
+
+//set the PS BUFFER to zero
+  i2c_write_byte( 1,0,RDS_CHIP_WRITE);
+  i2c_write_byte( 0,0,0x02);
+  i2c_write_byte( 0,0,0x43);
+//  i2c_write_byte( 0,0,0x20);
+//  i2c_write_byte( 0,0,0x20);
+//  i2c_write_byte( 0,0,0x20);
+//  i2c_write_byte( 0,0,0x20);
+//  i2c_write_byte( 0,0,0x20);
+//  i2c_write_byte( 0,0,0x20);
+  i2c_write_byte( 0,1,0x20);
+  i2c_write_byte( 0,0,0x02);
+
+  usleep(100000);
+
+/*
+  //set the SPSER to 255
+  i2c_write_byte( 1,0,RDS_CHIP_WRITE);
+  i2c_write_byte( 0,0,0x72);
+  i2c_write_byte( 0,0,0xf0);
+  i2c_write_byte( 0,1,0x00);
+  usleep(100000);
+
+  //set the DSPMOD to 0
+  i2c_write_byte( 1,0,RDS_CHIP_WRITE);
+  i2c_write_byte( 0,0,0x73);
+  i2c_write_byte( 0,0,0x00);
+  i2c_write_byte( 0,1,0x00);
+  usleep(100000);
+
+  //set the LABPER to 255
+  i2c_write_byte( 1,0,RDS_CHIP_WRITE);
+  i2c_write_byte( 0,0,0x74);
+  i2c_write_byte( 0,0,0xf0);
+  i2c_write_byte( 0,1,0x00);
+  usleep(100000);
+
+  //set the SCRLSPD
+  i2c_write_byte( 1,0,RDS_CHIP_WRITE);
+  i2c_write_byte( 0,0,0x75);
+  i2c_write_byte( 0,0,0x00);
+  i2c_write_byte( 0,1,0x00);
+  usleep(100000);
+
+  //set the DSPNUM
+  i2c_write_byte( 1,0,RDS_CHIP_WRITE);
+  i2c_write_byte( 0,0,0x76);
+  i2c_write_byte( 0,0,0x00);
+  i2c_write_byte( 0,1,0x00);
+  usleep(100000);
+*/
+  //set the PS
+  i2c_write_byte( 1,0,RDS_CHIP_WRITE);
+  i2c_write_byte( 0,0,0xC0);
+  i2c_write_byte( 0,0,0x58);
+  i2c_write_byte( 0,1,0x00);
+  usleep(1000000);
+
+  //set the SPSPER
+  i2c_write_byte( 1,0,RDS_CHIP_WRITE);
+  i2c_write_byte( 0,0,0x72);
+  i2c_write_byte( 0,0,0xFF);
+  i2c_write_byte( 0,1,0x00);
+  usleep(1000000);
+
+  //set the DSPNUM
+  i2c_write_byte( 1,0,RDS_CHIP_WRITE);
+  i2c_write_byte( 0,0,0x76);
+  i2c_write_byte( 0,0,0x00);
+  i2c_write_byte( 0,1,0x00);
+  usleep(1000000);
+
+  //set DPS
+  i2c_write_byte( 1,0,RDS_CHIP_WRITE);
+  i2c_write_byte( 0,0,0x77);
+  i2c_write_byte( 0,0,0x41);
+  i2c_write_byte( 0,0,0x42);
+  i2c_write_byte( 0,1,0x00);
+  usleep(1000000);
+
+  //set the DSPNUM
+  i2c_write_byte( 1,0,RDS_CHIP_WRITE);
+  i2c_write_byte( 0,0,0x76);
+  i2c_write_byte( 0,0,0x02);
+  i2c_write_byte( 0,1,0x00);
+  usleep(1000000);
+
+
+}
+
+void LS_DOUBLE (int command1, uint32_t data1, int command2, uint32_t data2, int delay)
+{
+  unsigned char B0,B1,C0,C1,D0,D1;
+  unsigned char E0,E1,F0,F1,G0,G1;
+
+  B0 = 0x61;
+  B1 = command1 & 0x1f;
+  C0 = (data1>>24)&0xff;
+  C1 = (data1>>16)&0xff;
+  D0 = (data1>>8)&0xff;
+  D1 = (data1)&0xff;
+
+  i2c_write_byte( 1,0,RDS_CHIP_WRITE);
+  i2c_write_byte( 0,0,B0);
+  i2c_write_byte( 0,0,B0);
+  i2c_write_byte( 0,0,B1);
+  i2c_write_byte( 0,0,C0);
+  i2c_write_byte( 0,0,C1);
+  i2c_write_byte( 0,0,D0);
+  i2c_write_byte( 0,0,D1);
+  i2c_write_byte( 0,1,0x01);
+  usleep(delay);
+
+  E0 = 0x67;
+  E1 = command2 & 0x1f;
+  F0 = (data2>>24)&0xff;
+  F1 = (data2>>16)&0xff;
+  G0 = (data2>>8)&0xff;
+  G1 = (data2)&0xff;
+
+  i2c_write_byte( 1,0,RDS_CHIP_WRITE);
+  i2c_write_byte( 0,0,E0);
+  i2c_write_byte( 0,0,E0);
+  i2c_write_byte( 0,0,E1);
+  i2c_write_byte( 0,0,F0);
+  i2c_write_byte( 0,0,F1);
+  i2c_write_byte( 0,0,G0);
+  i2c_write_byte( 0,0,G1);
+  i2c_write_byte( 0,1,0x01);
+  usleep(delay);
+
+}
+
+void RDS_ENABLE_UDG1() 
+{
+
+// disables Radio Text
+  i2c_write_byte( 1,0,RDS_CHIP_WRITE);
+  i2c_write_byte( 0,0,0x60);
+  i2c_write_byte( 0,0,0x01);
+  i2c_write_byte( 0,1,0);
+
+}
