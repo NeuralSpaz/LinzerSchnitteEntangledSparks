@@ -15,3 +15,6 @@ linzerschnitte-rds-bitmaps
     DATA04=uint32_t\0
 
 The DATA0X fields are interpreted as bitmasks, e.g. 0x00000080 == 00000000 00000000 00000000 10000000 means that only pixel nr 24 in this row is on.
+
+
+I2C Bus Speed may need to be adjusted down if abritration fails.
