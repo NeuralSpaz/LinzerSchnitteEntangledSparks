@@ -26,6 +26,7 @@
 #include <assert.h>
 #include "sparkfunc.h"
 #include <unistd.h>
+#include <inttypes.h>
 #include "i2c_bitbang.h"
 
 #define BUFSIZE 2048
@@ -158,7 +159,7 @@ void processData(char *message, int messageLength)
 	}
 	if (memcmp(DATA01str,"DATA01=",7)==0 ) {
 		data = split(DATA01str,delim);
-		data01 = atoi(data);
+                sscanf(data, "%"SCNu32, &data01);
 		fprintf(stderr,"%08X = ",data01);
 		printbitssimple(data01);
 		fprintf(stderr,"\n");
@@ -166,21 +167,21 @@ void processData(char *message, int messageLength)
 	}
 	if (memcmp(DATA02str,"DATA02=",7)==0 ) {
 		data = split(DATA02str,delim);
-		data02 = atoi(data);
+                sscanf(data, "%"SCNu32, &data02);
 		fprintf(stderr,"%08X = ",data02);
 		printbitssimple(data02);
 		fprintf(stderr,"\n");
 	}
 	if (memcmp(DATA03str,"DATA03=",7)==0 ) {
 		data = split(DATA03str,delim);
-		data03 = atoi(data);
+                sscanf(data, "%"SCNu32, &data03);
 		fprintf(stderr,"%08X = ",data03);
 		printbitssimple(data03);
 		fprintf(stderr,"\n");
 	}
 	if (memcmp(DATA04str,"DATA04=",7)==0 ) {
 		data = split(DATA04str,delim);
-		data04 = atoi(data);
+                sscanf(data, "%"SCNu32, &data04);
 		fprintf(stderr,"%08X = ",data04);
 		printbitssimple(data04);
 		fprintf(stderr,"\n");
