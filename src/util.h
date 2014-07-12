@@ -17,6 +17,9 @@
     You should have received a copy of the GNU General Public License
     along with this program.  If not, see <http://www.gnu.org/licenses/>.
 */
+#ifndef _ENTANGLED_SPARKS_UTIL_H_
+#define _ENTANGLED_SPARKS_UTIL_H_
+
 #define USECS_PER_SEC 1000000
 
 void print_warranty(void);
@@ -25,3 +28,5 @@ void print_conditions(void);
 void print32bits(uint32_t);
 void print64bits(uint64_t);
 double int2double(uint32_t, uint32_t);
+
+#endif

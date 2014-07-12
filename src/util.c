@@ -24,12 +24,26 @@
 
 void print_warranty(void)
 {
-
+    fprintf(stderr,"\n");
+    fprintf(stderr,"Disclaimer of Warranty.\n");
+    fprintf(stderr,"\n");
+    fprintf(stderr,"  THERE IS NO WARRANTY FOR THE PROGRAM, TO THE EXTENT PERMITTED BY\n");
+    fprintf(stderr,"APPLICABLE LAW.  EXCEPT WHEN OTHERWISE STATED IN WRITING THE COPYRIGHT\n");
+    fprintf(stderr,"HOLDERS AND/OR OTHER PARTIES PROVIDE THE PROGRAM \"AS IS\" WITHOUT WARRANTY\n");
+    fprintf(stderr,"OF ANY KIND, EITHER EXPRESSED OR IMPLIED, INCLUDING, BUT NOT LIMITED TO,\n");
+    fprintf(stderr,"THE IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR\n");
+    fprintf(stderr,"PURPOSE.  THE ENTIRE RISK AS TO THE QUALITY AND PERFORMANCE OF THE PROGRAM\n");
+    fprintf(stderr,"IS WITH YOU.  SHOULD THE PROGRAM PROVE DEFECTIVE, YOU ASSUME THE COST OF\n");
+    fprintf(stderr,"ALL NECESSARY SERVICING, REPAIR OR CORRECTION.\n");
+    exit(EXIT_FAILURE);
 }
 
 void print_conditions(void)
 {
-
+    fprintf(stderr,"\n");
+    fprintf(stderr,"see the License file in the directory or see <http://www.gnu.org/licenses/");
+    fprintf(stderr,"\n");
+    exit(EXIT_FAILURE);
 }
 
 void print32bits(uint32_t n)

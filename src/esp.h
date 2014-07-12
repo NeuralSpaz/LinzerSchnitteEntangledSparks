@@ -19,6 +19,8 @@
 */
 
 // Structures and word order convserisons for Entangles Sparks Protocal (esp)
+#ifndef _ENTANGLED_SPARKS_PROT_H_
+#define _ENTANGLED_SPARKS_PROT_H_
 
 typedef struct espDataPacket 
 {
@@ -47,3 +49,5 @@ espDataPacket data_hton(espDataPacket);
 espDataPacket data_ntoh(espDataPacket);
 espAckPacket ack_hton(espAckPacket);
 espAckPacket ack_nton(espAckPacket);
+
+#endif

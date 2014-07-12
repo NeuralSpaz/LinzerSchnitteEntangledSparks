@@ -17,3 +17,19 @@
     You should have received a copy of the GNU General Public License
     along with this program.  If not, see <http://www.gnu.org/licenses/>.
 */
+#ifndef _ENTANGLED_SPARKS_TIME_H_
+#define _ENTANGLED_SPARKS_TIME_H_
+
+
+typedef struct Clock
+{
+    uint32_t  seconds;
+    uint32_t useconds;
+} Clock;
+
+Clock initClock();
+Clock getProgramClock(Clock offSetClock);
+Clock adjustClock(Clock offSetClock, int32_t correction);
+
+
+#endif
