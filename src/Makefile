@@ -4,10 +4,10 @@ CFLAGS += -Wall -Werror
 LIBS+=
 LIBS2+= -Igpio/include -Lgpio/library -lrpigpio
 
-all: tests.o esp.o util.o esp_time.o udp.o flint.o steel.o
+all: tests.o esp.o util.o esp_time.o udp.o flint.o steel.o i2c_bitbang.o
 	$(CC) $(CFLAGS) -o tests tests.o esp.o util.o esp_time.o $(LIBS)
 	$(CC) -o flint flint.o esp.o util.o esp_time.o udp.o $(LIBS)
-	$(CC) -o steel steel.o esp.o util.o esp_time.o udp.o $(LIBS)
+	$(CC) -o steel steel.o esp.o util.o esp_time.o udp.o i2c_bitbang.o $(LIBS) $(LIBS2)
 	cp tests ../
 	cp flint ../
 	cp steel ../
@@ -16,7 +16,7 @@ flint.o: flint.c
 	$(CC) $(CFLAGS) -c -o flint.o flint.c $(LIBS)
 
 steel.o: steel.c
-	$(CC) -c -o steel.o steel.c $(LIBS)
+	$(CC) -c -o steel.o steel.c $(LIBS) $(LIBS2)
 
 tests.o: tests.c
 	$(CC) $(CFLAGS) -c -o tests.o tests.c $(LIBS)
@@ -32,6 +32,10 @@ esp_time.o: esp_time.c esp_time.h
 
 udp.o: udp.c udp.h
 	$(CC) $(CFLAGS) -c -o udp.o udp.c $(LIBS)
+
+i2c_bitbang.o: i2c_bitbang.c i2c_bitbang.h
+	./make-rPi-GPIO.sh
+	$(CC) $(CFLAGS) -c -o i2c_bitbang.o i2c_bitbang.c $(LIBS2) $(LIBS)
 
 clean:
 	$(RM) *.o

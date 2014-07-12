@@ -35,7 +35,7 @@
 #include "esp.h"
 #include "esp_time.h"
 #include "udp.h"
-//#include "i2c_bitbang.h"
+#include "i2c_bitbang.h"
 
 #define BUFFERSIZE 32
 #define VESRION 1.10
@@ -75,7 +75,21 @@ int main(int argc, char **argv)
 			case 'm': mode=atoi(optarg); break;
 		}
 	
+	//Init GPIO
+	if (gpioSetup() != OK)
+	{
+			dbgPrint(DBG_INFO, "gpioSetup failed. Exiting\n");
+			return 1;
+	}
 
+	LS_CMD(10,0xffff,0);
+	sleep(1);
+	LS_CMD(10,0xffff,0);
+	sleep(1);
+	RDS_CONFIG();
+	sleep(1);
+	RDS_ENABLE_UDG1();
+	sleep(1);
 
 
 	uint32_t acks;
@@ -155,7 +169,7 @@ int main(int argc, char **argv)
     			// Consume BUFFER AND Send RDS DATA
     			if(data01!=last_data01) 
     			{
-    				//LS_RAW2((int)20,(uint32_t)data01,wait); 
+    				LS_RAW2((int)20,(uint32_t)data01,0); 
     				last_data01=data01; 
     				fprintf(stderr,"CMD 20 %08X\n",data01);
     			}
