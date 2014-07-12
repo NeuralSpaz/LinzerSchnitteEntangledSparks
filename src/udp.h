@@ -17,3 +17,8 @@
     You should have received a copy of the GNU General Public License
     along with this program.  If not, see <http://www.gnu.org/licenses/>.
 */
+
+#ifndef _ENTANGLED_SPARKS_UDP_H_
+#define _ENTANGLED_SPARKS_UDP_H_
+
+#endif

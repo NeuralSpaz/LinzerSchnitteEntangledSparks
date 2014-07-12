@@ -24,191 +24,210 @@
 #include <sys/socket.h>
 #include <arpa/inet.h>
 #include <assert.h>
-#include "sparkfunc.h"
 #include <unistd.h>
 #include <inttypes.h>
-#include "i2c_bitbang.h"
+#include <fcntl.h>
+#include <poll.h>
+#include <sys/timerfd.h>
+#include <sched.h>
 
-#define BUFSIZE 2048
-float version = 1.00;
+#include "util.h"
+#include "esp.h"
+#include "esp_time.h"
+#include "udp.h"
+//#include "i2c_bitbang.h"
 
-uint32_t frameid;
-uint32_t data01 = 0;
-uint32_t data02 = 0;
-uint32_t data03 = 0;
-uint32_t data04 = 0;
-uint32_t last_data01 = 0;
-uint32_t last_data02 = 0;
-uint32_t last_data03 = 0;
-uint32_t last_data04 = 0;
-double timestamp = 0;
-int wait=80000;
+#define BUFFERSIZE 32
+#define VESRION 1.10
+#define RDS_PACKET_INTERVAL 180000000 //180ms
 
-void processData(char *message, int messageLength);
-void sendRDS();
+
+void print_steel_help(void);
+void print_greating(void);
 
 int main(int argc, char **argv)
 {
-	fprintf(stderr, "Steel:Entangled Sparks: FM Transmitter Contoller for Entagngled Sparks Version %1.2f\n", version);
-	fprintf(stderr, "Copyright (C)2014 Josh Gardiner josh@zool.com\n");
-	fprintf(stderr, "\nThis program comes with ABSOLUTELY NO WARRANTY; for details type -w\n");
-	fprintf(stderr, "This is free software, and you are welcome to redistribute it\n");
-	fprintf(stderr, "under certain conditions; type -c for details.\n");
-	fprintf(stderr, "\ntype -h for help\n\n");
+	print_greating(); // Prints greating
 
 
+	Clock ProcessClock; 
+	Clock offSetClock;
+
+	offSetClock=initClock();
+
+	espDataPacket recvpacket; // We Recive espData Packets
+	espAckPacket sendpacket;  // We Send espAck Packets
+
+	espDataPacket recvbuffer[32];
+
+	int port = 1535; // Default Listen Port
+	int mode = 0; // 0 = STD CLIENT, >0 = STANDALONE TESTPATTERNS 
 	int cmd_option;
-	int port = 1535;
+	// Parse Options
+	while((cmd_option=getopt(argc, argv, "hp:wcm:")) != EOF)
+		switch(cmd_option)
+		{
+			default:
+			case 'h': print_steel_help(); 
+			case 'p': port=atoi(optarg); break;
+			case 'w': print_warranty();
+			case 'c': print_conditions();
+			case 'm': mode=atoi(optarg); break;
+		}
+	
 
-	while((cmd_option=getopt(argc, argv, "hp:wcd:")) != EOF)
-	switch(cmd_option)
-	{
-		default:
-		case 'h': print_steel_help(); 
-		case 'p': port=atoi(optarg); break;
-		case 'w': print_warranty();
-		case 'c': print_conditions();
-		case 'd': wait=atoi(optarg); break;
-	}
+
+
+	uint32_t acks;
+	uint32_t bufferposition;
+	uint32_t acks_wrap_buffer;
+	uint32_t lastFrameID=0;
+	uint32_t currentFrameID=0;
 
 	struct sockaddr_in myaddr;
 	struct sockaddr_in remaddr;
 	socklen_t addrlen = sizeof(remaddr);
 	int recvlen;
-	int fd;
+	int recvsocket;
+	int tick=0;
 
-	char buf[BUFSIZE];
-
-	if (gpioSetup() != OK)
+	if ((recvsocket = socket(AF_INET, SOCK_DGRAM, 0)) < 0) 
 	{
-			dbgPrint(DBG_INFO, "gpioSetup failed. Exiting\n");
-			return 1;
-	}
-
-	LS_CMD(10,0xffff,0);
-	sleep(1);
-	LS_CMD(10,0xffff,0);
-	sleep(1);
-	RDS_CONFIG();
-	sleep(1);
-	RDS_ENABLE_UDG1();
-	sleep(1);
-
-//	RDS_SET_PS();
-//	sleep(1);
-
-	if ((fd = socket(AF_INET, SOCK_DGRAM, 0)) < 0) {
 		perror("cannot create socket\n");
 		return 0;
 	}
 
 	memset((char *)&myaddr, 0, sizeof(myaddr));
 	myaddr.sin_family = AF_INET;
-	myaddr.sin_addr.s_addr = htonl(INADDR_ANY);
+	myaddr.sin_addr.s_addr = htonl(INADDR_ANY); // listen on all interfaces
 	myaddr.sin_port = htons(port);
 
-	if (bind(fd, (struct sockaddr *)&myaddr, sizeof(myaddr)) < 0) {
+	if (bind(recvsocket, (struct sockaddr *)&myaddr, sizeof(myaddr)) < 0) 
+	{
 		perror("bind failed");
 		return 0;
 	}
+	
+	int rv;
+	
 
-	printf("waiting on port %d\n", port);
+	struct sched_param schedparm;
+	memset(&schedparm, 0, sizeof(schedparm));
+    schedparm.sched_priority = 1; // lowest rt priority
+    sched_setscheduler(0, SCHED_FIFO, &schedparm);
 
-	for (;;) {
-		recvlen = recvfrom(fd, buf, BUFSIZE, 0, (struct sockaddr *)&remaddr, &addrlen);
-		// system("clear");
-		if (recvlen > 0) {
-			buf[recvlen] = 0;
-			processData(buf,recvlen);
-			sendRDS();
+	struct itimerspec timspec;
+	bzero(&timspec, sizeof(timspec));
+    timspec.it_interval.tv_sec = 0;
+    timspec.it_interval.tv_nsec = RDS_PACKET_INTERVAL;
+    //timspec.it_value.tv_sec = 0;
+    timspec.it_value.tv_nsec =1;
+
+    int timerfd = timerfd_create(CLOCK_MONOTONIC,0);
+	int timer1=timerfd_settime(timerfd, 0, &timspec, 0);
+
+	struct pollfd ufds[2];
+	ufds[0].fd = timerfd;
+	ufds[0].events = POLLIN; //| POLLPRI; // check for normal or out-of-band
+
+	ufds[1].fd = recvsocket;
+	ufds[1].events = POLLIN; //| POLLPRI; // check for normal or out-of-band
+	uint64_t loopcount=0;
+	uint32_t data01 = 0X00000001;
+	uint32_t last_data01;
+
+	for(;;)
+   	{
+   		rv = poll(ufds, 2, 1);
+    	//tick++;
+    	if (rv == -1) 
+    	{
+   			perror("poll"); // error occurred in poll()
+		} else if (rv == 0) 
+		{
+			// Do Nothing
+
+		} else 
+		{
+    		if (ufds[0].revents & POLLIN) 
+    		{
+    			read(timerfd, &loopcount, sizeof(uint64_t)); // reset Timer
+    			// Consume BUFFER AND Send RDS DATA
+    			if(data01!=last_data01) 
+    			{
+    				//LS_RAW2((int)20,(uint32_t)data01,wait); 
+    				last_data01=data01; 
+    				fprintf(stderr,"CMD 20 %08X\n",data01);
+    			}
+
+    			printf("Ticks %d\n",tick);
+    			tick++;
+    			data01=tick;
+    		}
+
+    		if (ufds[1].revents & POLLIN) 
+    		{
+				recvlen = recvfrom(recvsocket, &recvpacket, sizeof(espDataPacket), 0, (struct sockaddr *)&remaddr, &addrlen);
+				if (recvlen > 0)
+				{
+					recvpacket=data_ntoh(recvpacket);
+					bufferposition = recvpacket.frameid % BUFFERSIZE;
+					recvbuffer[bufferposition]=recvpacket; // puts recived packet into buffer
+					printf("Got Packet!\n");
+				} else 
+				{
+					printf("uh oh - something went wrong!\n");
+				}
+				// Send Acks..........
+				lastFrameID=currentFrameID;
+				currentFrameID=recvpacket.frameid;
+				sendpacket.frameid 		= recvpacket.frameid;
+				sendpacket.ptime_sec  	= recvpacket.ptime_sec;
+				sendpacket.ptime_usec 	= recvpacket.ptime_usec;
+				sendpacket.acktime_sec	= ProcessClock.seconds;
+				sendpacket.acktime_usec	= ProcessClock.useconds;
+				// Ack Bitfield
+				if ( (currentFrameID-lastFrameID)>0 )
+				{
+					acks <<= (currentFrameID-lastFrameID);
+					acks |= acks_wrap_buffer>> (BUFFERSIZE-(currentFrameID-lastFrameID));
+					acks_wrap_buffer <<= (currentFrameID-lastFrameID);
+					acks |= 1;
+					sendpacket.acks=acks;
+				} else if ( (currentFrameID-lastFrameID)<0 )
+				{
+					acks_wrap_buffer >>= (lastFrameID-currentFrameID) ;
+					acks_wrap_buffer |= (acks<<(BUFFERSIZE-(lastFrameID-currentFrameID)));
+					acks >>= (lastFrameID-currentFrameID);
+					acks |= 0xFFFFFFFF<<(BUFFERSIZE-(lastFrameID-currentFrameID));
+					acks |= 1;
+					sendpacket.acks=acks;
+				}
+				// Send ACK Packet			
+				sendpacket=ack_hton(sendpacket);
+				if (sendto(recvsocket, &sendpacket, sizeof(espAckPacket), 0, (struct sockaddr *)&remaddr, addrlen) < 0)
+				{
+				perror("sendto");
+				}
+			}
 		}
-		else {
-			printf("uh oh - something went wrong!\n");
-		}
-		sprintf(buf, "FRAMEID=%d\n%6.6f\n", frameid, getTime());
-		printf("sending response %s", buf);
-		if (sendto(fd, buf, strlen(buf), 0, (struct sockaddr *)&remaddr, addrlen) < 0)
-			perror("sendto");
+	} 
 
-	}
-
+	return 0;
 }
 
 
-
-void processData(char *message, int messageLength)
+void print_steel_help()
 {
-	char FRAMEIDstr[100], TIMESTAMPstr[100], DATA01str[100], DATA02str[100], DATA03str[100], DATA04str[100];
-
-	sscanf(message, "%s %s %s %s %s %s",FRAMEIDstr, TIMESTAMPstr, DATA01str, DATA02str, DATA03str, DATA04str);
-
-	fprintf(stderr, "%s\n %s\n %s\n %s\n %s\n %s\n",FRAMEIDstr, TIMESTAMPstr, DATA01str, DATA02str, DATA03str, DATA04str);
-
-	char *data;
-	const char delim[2] = "=";
-
-	if (memcmp(FRAMEIDstr,"FRAMEID=",8)==0 ) {
-		data = split(FRAMEIDstr,delim);
-		frameid = atoi(data);
-		fprintf(stderr,"FRAMEID=%d\n",frameid);
-	}
-	if (memcmp(TIMESTAMPstr,"TIMESTAMP=",10)==0 ) {
-		data = split(TIMESTAMPstr,delim);
-		timestamp = atof(data);
-		fprintf(stderr,"TIMESTAMP=%6.6f\n",timestamp);
-	}
-	if (memcmp(DATA01str,"DATA01=",7)==0 ) {
-		data = split(DATA01str,delim);
-                sscanf(data, "%"SCNu32, &data01);
-		fprintf(stderr,"%08X = ",data01);
-		printbitssimple(data01);
-		fprintf(stderr,"\n");
-
-	}
-	if (memcmp(DATA02str,"DATA02=",7)==0 ) {
-		data = split(DATA02str,delim);
-                sscanf(data, "%"SCNu32, &data02);
-		fprintf(stderr,"%08X = ",data02);
-		printbitssimple(data02);
-		fprintf(stderr,"\n");
-	}
-	if (memcmp(DATA03str,"DATA03=",7)==0 ) {
-		data = split(DATA03str,delim);
-                sscanf(data, "%"SCNu32, &data03);
-		fprintf(stderr,"%08X = ",data03);
-		printbitssimple(data03);
-		fprintf(stderr,"\n");
-	}
-	if (memcmp(DATA04str,"DATA04=",7)==0 ) {
-		data = split(DATA04str,delim);
-                sscanf(data, "%"SCNu32, &data04);
-		fprintf(stderr,"%08X = ",data04);
-		printbitssimple(data04);
-		fprintf(stderr,"\n");
-	}
-
+	printf("PlaceHolder for useful tips\n");
 }
 
-void sendRDS()
+void print_greating(void)
 {
-//	RESEND_LS_RAW2();
-
-//if(data01!=last_data01) {LS_RAW2((int)20,(uint32_t)data01); RESEND_LS_RAW2(); last_data01=data01; fprintf(stderr,"CMD 20 %08X\n",data01);}
-//if(data02!=last_data02) {LS_RAW2((int)21,(uint32_t)data02); RESEND_LS_RAW2(); last_data02=data02; fprintf(stderr,"CMD 21 %08X\n",data02);}
-//if(data03!=last_data03) {LS_RAW2((int)22,(uint32_t)data03); RESEND_LS_RAW2(); last_data03=data03; fprintf(stderr,"CMD 22 %08X\n",data03);}
-//if(data04!=last_data04) {LS_RAW2((int)23,(uint32_t)data04); RESEND_LS_RAW2(); last_data04=data04; fprintf(stderr,"CMD 23 %08X\n",data04);}
-
-if(data01!=last_data01) {LS_RAW2((int)20,(uint32_t)data01,wait); last_data01=data01; fprintf(stderr,"CMD 20 %08X\n",data01);}
-if(data02!=last_data02) {LS_RAW2((int)21,(uint32_t)data02,wait); last_data02=data02; fprintf(stderr,"CMD 21 %08X\n",data02);}
-if(data03!=last_data03) {LS_RAW2((int)22,(uint32_t)data03,wait); last_data03=data03; fprintf(stderr,"CMD 22 %08X\n",data03);}
-if(data04!=last_data04) {LS_RAW2((int)23,(uint32_t)data04,wait); last_data04=data04; fprintf(stderr,"CMD 23 %08X\n",data04);}
-
-//LS_DOUBLE(20,data01,21,data02,wait);
-
-
-//if(data01!=last_data01) {LS_RAW((int)20,(uint32_t)data01); last_data01=data01; fprintf(stderr,"CMD 20 %08X\n",data01);}
-//if(data02!=last_data02) {LS_RAW2((int)21,(uint32_t)data02); last_data02=data02; fprintf(stderr,"CMD 21 %08X\n",data02);}
-//if(data03!=last_data03) {LS_RAW((int)22,(uint32_t)data03); last_data03=data03; fprintf(stderr,"CMD 22 %08X\n",data03);}
-//if(data04!=last_data04) {LS_RAW2((int)23,(uint32_t)data04); last_data04=data04; fprintf(stderr,"CMD 23 %08X\n",data04);}
-
+	fprintf(stderr, "Steel:Entangled Sparks: FM Transmitter Contoller for Entagngled Sparks Version %1.2f\n", VESRION);
+	fprintf(stderr, "Copyright (C)2014 Josh Gardiner josh@zool.com\n");
+	fprintf(stderr, "\nThis program comes with ABSOLUTELY NO WARRANTY; for details type -w\n");
+	fprintf(stderr, "This is free software, and you are welcome to redistribute it\n");
+	fprintf(stderr, "under certain conditions; type -c for details.\n");
+	fprintf(stderr, "\ntype -h for help\n\n");
 }
