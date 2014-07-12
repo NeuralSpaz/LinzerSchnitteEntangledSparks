@@ -39,7 +39,7 @@
 
 #define BUFFERSIZE 32
 #define VESRION 1.10
-#define RDS_PACKET_INTERVAL 180000000 //180ms
+#define RDS_PACKET_INTERVAL 180000000 //190ms
 
 
 void print_steel_help(void);
@@ -148,8 +148,14 @@ int main(int argc, char **argv)
 	ufds[1].events = POLLIN; //| POLLPRI; // check for normal or out-of-band
 	uint64_t loopcount=0;
 	uint32_t data01 = 0X00000001;
+	uint32_t data02 = 0X00000001;
+	uint32_t data03 = 0X00000001;
+	uint32_t data04 = 0X00000001;
 	uint32_t last_data01;
-
+	uint32_t last_data02;
+	uint32_t last_data03;
+	uint32_t last_data04;
+	
 	for(;;)
    	{
    		rv = poll(ufds, 2, 1);
@@ -177,6 +183,10 @@ int main(int argc, char **argv)
     			printf("Ticks %d\n",tick);
     			tick++;
     			data01=tick;
+    			//data02=tick;
+    			//data03=tick;
+    			//data04=tick;
+
     		}
 
     		if (ufds[1].revents & POLLIN) 
