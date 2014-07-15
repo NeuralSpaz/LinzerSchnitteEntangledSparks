@@ -24,25 +24,25 @@
 
 typedef struct espDataPacket 
 {
-	uint32_t prot_header;
-	uint32_t frameid;
-	uint32_t cmd;
-	uint32_t data;
-	uint32_t ptime_sec;	
-	uint32_t ptime_usec;
-	int32_t  clockadj_usec;
+    uint32_t prot_header;
+    uint32_t frameid;
+    uint32_t cmd;
+    uint32_t data;
+    uint32_t ptime_sec; 
+    uint32_t ptime_usec;
+    int32_t  clockadj_usec;
 
 } espDataPacket;
 
 typedef struct espAckPacket
 {
-	uint32_t prot_header;
-	uint32_t frameid;
-	uint32_t acks;
-	uint32_t ptime_sec;	
-	uint32_t ptime_usec;
-	uint32_t acktime_sec;
-	uint32_t acktime_usec;
+    uint32_t prot_header;
+    uint32_t frameid;
+    uint32_t acks;
+    uint32_t ptime_sec; 
+    uint32_t ptime_usec;
+    uint32_t acktime_sec;
+    uint32_t acktime_usec;
 
 } espAckPacket;
 // This Converts an Entangled Sparks Protocol 

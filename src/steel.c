@@ -162,7 +162,7 @@ int main(int argc, char **argv)
                 // Consume BUFFER AND Send RDS DATA
     
 
-                printf("Ticks %d\n",tick);
+                //printf("PlaceHolderfor RDS COMMANDS %d\n",tick);
                 tick++;
             }
 
@@ -172,7 +172,7 @@ int main(int argc, char **argv)
                 if (recvlen > 0)
                 {
                     recvpacket=data_ntoh(recvpacket);
-                    printf("Got Packet!\n");
+                    Print_espDataPacket(recvpacket);
                 } else 
                 {
                     printf("uh oh - something went wrong!\n");
@@ -180,11 +180,13 @@ int main(int argc, char **argv)
                 // Send Acks..........
                 lastFrameID=currentFrameID;
                 currentFrameID=recvpacket.frameid;
+                sendpacket.prot_header  = recvpacket.prot_header;
                 sendpacket.frameid      = recvpacket.frameid;
                 sendpacket.ptime_sec    = recvpacket.ptime_sec;
                 sendpacket.ptime_usec   = recvpacket.ptime_usec;
                 sendpacket.acktime_sec  = 0;
                 sendpacket.acktime_usec = 0;
+
 
                 // Ack Bitfield
                 if ( (currentFrameID-lastFrameID)>0 )
