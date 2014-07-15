@@ -47,7 +47,22 @@ int main(int argc, char**argv)
 	fprintf(stderr, "\ntype -h for help\n\n");
 
 
-
+    // Insert Sender Code Here!!! :)
+    // New Format for esp packet!!
+    // Time Sync offset from sender or reciver?
+    // Enable Bcast on sender socket
+    // mode for sending 
+    // initilisation for syncing clock
+    // After Sync is achived then send data, else things get a little messy with queuing on the recv side.
+    // could change to whatever you like but send one command at a time maybe incorporate the 
+    // RDS command into the Packet structure at the Sender side with some functions to deal with it...
+    // 
+    // Possible Jitter problem on the LS Reciver side from time of exicution of LS_CMD to FM Transmision.
+    //
+    //
+    //
+    //
+    
 
 	return 0;
 }

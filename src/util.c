@@ -20,7 +20,10 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <stdint.h>
+#include <assert.h>
 #include "util.h"
+
+
 
 void print_warranty(void)
 {
@@ -81,4 +84,58 @@ double int2double_time(uint32_t seconds, uint32_t useconds)
     double value;
     value = (double)seconds + (double)useconds/USECS_PER_SEC;
     return value;
+}
+
+typedef struct queueRDS {
+  RDS_Command contents[QUEUE_SIZE];
+  int front;
+  int count;
+} queueRDS;
+
+
+RDS_Queue QueueCreate(void)
+{
+    RDS_Queue queue;
+
+    queue = (RDS_Queue)malloc(sizeof(queueRDS));
+
+    queue->front = 0;
+    queue->count = 0;
+
+    return queue;
+}
+
+void QueueEnter(RDS_Queue queue, RDS_Command command)
+{
+    int elementPosition;
+
+    elementPosition = (queue->front + queue->count)% QUEUE_SIZE; // warp
+    queue->contents[elementPosition] = command;
+
+    queue->count++;
+    // check if queue is full 
+    assert(queue->count < QUEUE_SIZE+1);
+
+}
+
+void QueueInsert(RDS_Queue queue, RDS_Command command, int elementPosition)
+{
+    assert (elementPosition >= 0 && elementPosition< QUEUE_SIZE);
+    queue->contents[elementPosition]= command;
+    queue->count++;
+//    queue->contents[elementPosition].status==DIRTY;
+}
+
+
+RDS_Command QueueDelete(RDS_Queue queue)
+{
+    // Need to 
+    RDS_Command command;
+
+    command = queue->contents[queue->front];
+
+    queue->front++;
+    queue->front %= QUEUE_SIZE;
+    queue->count--;
+    return command;
 }

@@ -28,19 +28,19 @@
 
 int main (void)
 {
-    printf("Starting Unit Tests\n\n");
+    printf("Starting Tests\n\n");
 
     printf("Start esp Tests\n");
 
+    // This just test some of the function ....
+    // sandbox or whatever you want to call it...
 
     // Test espData Packet
     espDataPacket espHostPacket, espNetworkPacket, espHostPacket2;
 
     espHostPacket.prot_header   = 0XF0F0F0F0;
-    espHostPacket.data01        = 0XFFFF1111;
-    espHostPacket.data02        = 0X10101010;
-    espHostPacket.data03        = 0X01010101;
-    espHostPacket.data04        = 0XA4A4A4A4;
+    espHostPacket.data          = 0XFFFF1111;
+
     espHostPacket.ptime_sec     = 0XB4B4B4B4;
     espHostPacket.ptime_usec    = 0XAAAAAAAA;
     espHostPacket.clockadj_usec = 0XCCCCCCCC;
@@ -48,14 +48,6 @@ int main (void)
 
     espNetworkPacket=data_hton(espHostPacket);
     espHostPacket2=data_ntoh(espNetworkPacket);
-    if (espHostPacket2.data01==espHostPacket.data01) 
-        {printf ("ESP Data01 Test Passed\n");} else { printf("Failed Data01\n");  }
-    if (espHostPacket2.data02==espHostPacket.data02) 
-        {printf ("ESP Data02 Test Passed\n");} else { printf("Failed Data02\n");  }
-    if (espHostPacket2.data03==espHostPacket.data03) 
-        {printf ("ESP Data03 Test Passed\n");} else { printf("Failed Data03\n");  }
-    if (espHostPacket2.data04==espHostPacket.data04) 
-        {printf ("ESP Data04 Test Passed\n");} else { printf("Failed Data04\n");  }
 
     if (espHostPacket2.ptime_sec==espHostPacket.ptime_sec)      
         {printf ("ESP ptime_sec Test Passed\n");} else { printf("Failed ptime_sec\n");  }
@@ -66,12 +58,49 @@ int main (void)
     if (espHostPacket2.frameid==espHostPacket.frameid)          
         {printf ("ESP espHostPacket Test Passed\n");} else { printf("Failed espHostPacket\n");  }
 
-    print32bits(espHostPacket.data01);
-    print32bits(espNetworkPacket.data01);
-    print32bits(espHostPacket2.data01);
 
 
+    // Create Queue
 
+    RDS_Queue q1 = QueueCreate();
+    // add stuff to queue
+    RDS_Command newCommand;
+    int i;
+    for (i=0; i<128 ; i++)
+    {
+        newCommand.prefix=20 + (i%4);
+        newCommand.data=i;
+        QueueEnter(q1,newCommand);
+    }
+    // get stuff from queue
+    RDS_Command oldComand;
+    for (i=0; i<128; i++ )
+    {
+        oldComand=QueueDelete(q1);
+        printf("From Queue: Prefix: %d, Data: %d \n",oldComand.prefix,oldComand.data);
+    }
+
+    for (i=0; i<128 ; i++)
+    {
+        printf("i %d mod 32 %d\n",i, i%32);
+    }
+
+    Print_espDataPacket(espHostPacket);
+    Print_espDataPacket(espNetworkPacket);
+
+    espAckPacket ackPacket;
+    ackPacket.ptime_sec=    0X0101F0F0;
+    ackPacket.ptime_usec=   0X0202FAFA;
+    ackPacket.acktime_sec=  0X0303FBFB;
+    ackPacket.acktime_usec= 0X0404FCFC;
+    ackPacket.frameid=      0X0505FDFD;
+    ackPacket.acks=         0X0606FEFE;
+
+    Print_espAckPacket(ackPacket);
+    ackPacket =ack_hton(ackPacket);
+    Print_espAckPacket(ackPacket);
+    ackPacket = ack_ntoh(ackPacket);
+    Print_espAckPacket(ackPacket);
 
     return 0;
 }

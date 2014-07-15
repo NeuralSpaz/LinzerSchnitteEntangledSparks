@@ -24,30 +24,38 @@
 
 typedef struct espDataPacket 
 {
-	uint32_t prot_header;;
-	uint32_t data01;
-	uint32_t data02;
-	uint32_t data03;
-	uint32_t data04;
+	uint32_t prot_header;
+	uint32_t frameid;
+	uint32_t cmd;
+	uint32_t data;
 	uint32_t ptime_sec;	
 	uint32_t ptime_usec;
 	int32_t  clockadj_usec;
-	uint32_t frameid;
+
 } espDataPacket;
 
 typedef struct espAckPacket
 {
+	uint32_t prot_header;
+	uint32_t frameid;
+	uint32_t acks;
 	uint32_t ptime_sec;	
 	uint32_t ptime_usec;
 	uint32_t acktime_sec;
 	uint32_t acktime_usec;
-	uint32_t frameid;
-	uint32_t acks;
-} espAckPacket;
 
+} espAckPacket;
+// This Converts an Entangled Sparks Protocol 
+// from host word order to network word order
+// Usage espDataPacket = data_hton(espDatapacket packet) etc...
+// hton = host to network
+// ntoh = network to host
 espDataPacket data_hton(espDataPacket);
 espDataPacket data_ntoh(espDataPacket);
-espAckPacket ack_hton(espAckPacket);
-espAckPacket ack_nton(espAckPacket);
+espAckPacket  ack_hton(espAckPacket);
+espAckPacket  ack_ntoh(espAckPacket);
+void Print_espDataPacket(espDataPacket);
+void Print_espAckPacket(espAckPacket);
+
 
 #endif

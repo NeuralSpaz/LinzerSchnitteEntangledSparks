@@ -21,65 +21,91 @@
 #include <stdint.h>
 #include <arpa/inet.h>
 #include "esp.h"
+#include <stdio.h>
 
 
-
+// This Converts an Entangled Sparks Protocol 
+// from host word order to network word order
+// Usage espDataPacket = data_hton(espDatapacket packet)
 espDataPacket data_hton(espDataPacket hostpacket)
 {
-	espDataPacket networkpacket;
+    espDataPacket networkpacket;
 
-	networkpacket.data01		=	htonl(hostpacket.data01);
-	networkpacket.data02		=	htonl(hostpacket.data02);
-	networkpacket.data03		= 	htonl(hostpacket.data03);
-	networkpacket.data04		=	htonl(hostpacket.data04);
-	networkpacket.ptime_sec		= 	htonl(hostpacket.ptime_sec);
-	networkpacket.ptime_usec	= 	htonl(hostpacket.ptime_usec);
-	networkpacket.clockadj_usec	= 	htonl(hostpacket.clockadj_usec);
-	networkpacket.frameid		= 	htonl(hostpacket.frameid);
+    networkpacket.prot_header   =   htonl(hostpacket.prot_header);
+    networkpacket.frameid       =   htonl(hostpacket.frameid);
+    networkpacket.cmd           =   htonl(hostpacket.cmd);  
+    networkpacket.data          =   htonl(hostpacket.data);;
+    networkpacket.ptime_sec     =   htonl(hostpacket.ptime_sec);
+    networkpacket.ptime_usec    =   htonl(hostpacket.ptime_usec);
+    networkpacket.clockadj_usec =   htonl(hostpacket.clockadj_usec);
 
-	return networkpacket;
+    return networkpacket;
 }
 
 espDataPacket data_ntoh(espDataPacket networkpacket)
 {
-	espDataPacket hostpacket;
+    espDataPacket hostpacket;
 
-	hostpacket.data01			=	ntohl(networkpacket.data01);
-	hostpacket.data02			=	ntohl(networkpacket.data02);
-	hostpacket.data03			= 	ntohl(networkpacket.data03);
-	hostpacket.data04			=	ntohl(networkpacket.data04);
-	hostpacket.ptime_sec		= 	ntohl(networkpacket.ptime_sec);
-	hostpacket.ptime_usec		= 	ntohl(networkpacket.ptime_usec);
-	hostpacket.clockadj_usec	= 	ntohl(networkpacket.clockadj_usec);
-	hostpacket.frameid			= 	ntohl(networkpacket.frameid);
+    hostpacket.prot_header   =   htonl(networkpacket.prot_header);
+    hostpacket.frameid       =   htonl(networkpacket.frameid);
+    hostpacket.cmd           =   htonl(networkpacket.cmd);  
+    hostpacket.data          =   htonl(networkpacket.data);
+    hostpacket.ptime_sec     =   htonl(networkpacket.ptime_sec);
+    hostpacket.ptime_usec    =   htonl(networkpacket.ptime_usec);
+    hostpacket.clockadj_usec =   htonl(networkpacket.clockadj_usec);
 
-	return hostpacket;
+    return hostpacket;
 }
 
 espAckPacket ack_hton(espAckPacket hostpacket)
 {
-	espAckPacket networkpacket;
+    espAckPacket networkpacket;
 
-	networkpacket.ptime_sec 	= 	htonl(hostpacket.ptime_sec);
-	networkpacket.ptime_usec 	=	htonl(hostpacket.ptime_usec);
-	networkpacket.acktime_sec 	= 	htonl(hostpacket.acktime_sec);
-	networkpacket.acktime_usec	= 	htonl(hostpacket.acktime_usec);
-	networkpacket.frameid		= 	htonl(hostpacket.frameid);
-	networkpacket.acks 			= 	htonl(hostpacket.acks);
+    networkpacket.prot_header   =   htonl(hostpacket.prot_header);
+    networkpacket.frameid       =   htonl(hostpacket.frameid);
+    networkpacket.ptime_sec     =   htonl(hostpacket.ptime_sec);
+    networkpacket.ptime_usec    =   htonl(hostpacket.ptime_usec);
+    networkpacket.acktime_sec   =   htonl(hostpacket.acktime_sec);
+    networkpacket.acktime_usec  =   htonl(hostpacket.acktime_usec);
+    networkpacket.acks          =   htonl(hostpacket.acks);
 
-	return networkpacket;
+    return networkpacket;
 }
 
 espAckPacket ack_ntoh(espAckPacket networkpacket)
 {
-	espAckPacket hostpacket;
+    espAckPacket hostpacket;
 
-	hostpacket.ptime_sec 		= 	ntohl(networkpacket.ptime_sec);
-	hostpacket.ptime_usec 		=	ntohl(networkpacket.ptime_usec);
-	hostpacket.acktime_sec 		= 	ntohl(networkpacket.acktime_sec);
-	hostpacket.acktime_usec		= 	ntohl(networkpacket.acktime_usec);
-	hostpacket.frameid			= 	ntohl(networkpacket.frameid);
-	hostpacket.acks 			= 	ntohl(networkpacket.acks);
+    hostpacket.prot_header      =   htonl(networkpacket.prot_header);
+    hostpacket.frameid          =   ntohl(networkpacket.frameid);
+    hostpacket.ptime_sec        =   ntohl(networkpacket.ptime_sec);
+    hostpacket.ptime_usec       =   ntohl(networkpacket.ptime_usec);
+    hostpacket.acktime_sec      =   ntohl(networkpacket.acktime_sec);
+    hostpacket.acktime_usec     =   ntohl(networkpacket.acktime_usec);
+    hostpacket.acks             =   ntohl(networkpacket.acks);
 
-	return hostpacket;
+    return hostpacket;
+}
+
+
+void Print_espDataPacket(espDataPacket dataPacket)
+{
+    printf("dataPacket.prot_header=   %08X\n" ,dataPacket.prot_header);
+    printf("dataPacket.frameid=       %08X\n" ,dataPacket.frameid);
+    printf("dataPacket.cmd=           %08X\n", dataPacket.cmd);
+    printf("dataPacket.data=          %08X\n" ,dataPacket.data);  
+    printf("dataPacket.ptime_sec=     %08X\n" ,dataPacket.ptime_sec);
+    printf("dataPacket.ptime_usec=    %08X\n" ,dataPacket.ptime_usec);
+    printf("dataPacket.clockadj_usec= %08X\n" ,dataPacket.clockadj_usec);
+}
+
+void Print_espAckPacket(espAckPacket ackPacket)
+{
+    printf("ackPacket.prot_header=    %08X\n",ackPacket.prot_header);
+    printf("ackPacket.frameid=        %08X\n",ackPacket.frameid);
+    printf("ackPacket.ptime_sec=      %08X\n",ackPacket.ptime_sec);
+    printf("ackPacket.ptime_usec=     %08X\n",ackPacket.ptime_usec);
+    printf("ackPacket.acktime_sec=    %08X\n",ackPacket.acktime_sec);
+    printf("ackPacket.acktime_usec=   %08X\n",ackPacket.acktime_usec);
+    printf("ackPacket.acks=           %08X\n",ackPacket.acks);
 }
