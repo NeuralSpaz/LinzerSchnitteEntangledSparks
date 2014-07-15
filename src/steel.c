@@ -50,21 +50,14 @@ int main(int argc, char **argv)
 {
     print_greating(); // Prints greating
 
-    Clock ProcessClock; 
-    Clock offSetClock;
-
-    offSetClock=initClock();
-
     espDataPacket recvpacket; // We Recive espData Packets
     espAckPacket sendpacket;  // We Send espAck Packets
 
-    espDataPacket recvbuffer[32];
-
     int port = 1535; // Default Listen Port
-    int mode = 0; // 0 = STD CLIENT, >0 = STANDALONE TESTPATTERNS 
+
     int cmd_option;
     // Parse Options
-    while((cmd_option=getopt(argc, argv, "hp:wcm:")) != EOF)
+    while((cmd_option=getopt(argc, argv, "hp:wc")) != EOF)
         switch(cmd_option)
         {
             default:
@@ -72,10 +65,10 @@ int main(int argc, char **argv)
             case 'p': port=atoi(optarg); break;
             case 'w': print_warranty();
             case 'c': print_conditions();
-            case 'm': mode=atoi(optarg); break;
         }
     
     //Init GPIO
+    /*
     if (gpioSetup() != OK)
     {
             dbgPrint(DBG_INFO, "gpioSetup failed. Exiting\n");
@@ -91,10 +84,10 @@ int main(int argc, char **argv)
     RDS_ENABLE_UDG1();
     sleep(1);
     //END GPIO 
-
-    uint32_t acks;
-    uint32_t bufferposition;
-    uint32_t acks_wrap_buffer;
+    */
+    
+    uint32_t acks=0;
+    uint32_t acks_wrap_buffer=0;
     uint32_t lastFrameID=0;
     uint32_t currentFrameID=0;
 
@@ -137,11 +130,10 @@ int main(int argc, char **argv)
     bzero(&timspec, sizeof(timspec));
     timspec.it_interval.tv_sec = 0;
     timspec.it_interval.tv_nsec = RDS_PACKET_INTERVAL;
-    //timspec.it_value.tv_sec = 0;
     timspec.it_value.tv_nsec =1;
 
     int timerfd = timerfd_create(CLOCK_MONOTONIC,0);
-    int timer1=timerfd_settime(timerfd, 0, &timspec, 0);
+    timerfd_settime(timerfd, 0, &timspec, 0);
 
     struct pollfd ufds[2];
     ufds[0].fd = timerfd;
@@ -150,8 +142,6 @@ int main(int argc, char **argv)
     ufds[1].fd = recvsocket;
     ufds[1].events = POLLIN; //| POLLPRI; // check for normal or out-of-band
     uint64_t loopcount=0;
-    uint32_t data01 = 0X00000001;
-    uint32_t last_data01;
 
     for(;;)
     {
@@ -170,16 +160,10 @@ int main(int argc, char **argv)
             {
                 read(timerfd, &loopcount, sizeof(uint64_t)); // reset Timer
                 // Consume BUFFER AND Send RDS DATA
-                if(data01!=last_data01) 
-                {
-                    LS_RAW2((int)20,(uint32_t)data01,0); 
-                    last_data01=data01; 
-                    fprintf(stderr,"CMD 20 %08X\n",data01);
-                }
+    
 
                 printf("Ticks %d\n",tick);
                 tick++;
-                data01=tick;
             }
 
             if (ufds[1].revents & POLLIN) 
@@ -188,8 +172,6 @@ int main(int argc, char **argv)
                 if (recvlen > 0)
                 {
                     recvpacket=data_ntoh(recvpacket);
-                    bufferposition = recvpacket.frameid % BUFFERSIZE;
-                    recvbuffer[bufferposition]=recvpacket; // puts recived packet into buffer
                     printf("Got Packet!\n");
                 } else 
                 {
@@ -201,8 +183,9 @@ int main(int argc, char **argv)
                 sendpacket.frameid      = recvpacket.frameid;
                 sendpacket.ptime_sec    = recvpacket.ptime_sec;
                 sendpacket.ptime_usec   = recvpacket.ptime_usec;
-                sendpacket.acktime_sec  = ProcessClock.seconds;
-                sendpacket.acktime_usec = ProcessClock.useconds;
+                sendpacket.acktime_sec  = 0;
+                sendpacket.acktime_usec = 0;
+
                 // Ack Bitfield
                 if ( (currentFrameID-lastFrameID)>0 )
                 {

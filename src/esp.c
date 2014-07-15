@@ -23,10 +23,6 @@
 #include "esp.h"
 #include <stdio.h>
 
-
-// This Converts an Entangled Sparks Protocol 
-// from host word order to network word order
-// Usage espDataPacket = data_hton(espDatapacket packet)
 espDataPacket data_hton(espDataPacket hostpacket)
 {
     espDataPacket networkpacket;
