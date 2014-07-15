@@ -1,15 +1,25 @@
 # build executable
 CC = gcc
-CFLAGS += -Wall -Werror
-LIBS+=
-LIBS2+= -Igpio/include -Lgpio/library -lrpigpio
-all: tests 
+CFLAGS= -Wall -Werror -O2
+LIBS = -lrpigpio
+INCLUDES = -Isrc/gpio/include -Lsrc/gpio/library
+LDFLAGS= -Lsrc/gpio/library 
+SRCDIR=src
+OBJS1=$(addprefix $(SRCDIR)/,util.o esp.o esp_time.o udp.o flint.o)
+OBJS2=$(addprefix $(SRCDIR)/,util.o esp.o esp_time.o udp.o steel.o i2c_bitbang.o)
 
-tests: tests.o esp.o
-	$(CC) $(CFLAGS) -o tests.o esp.o  $(LIBS)
+all: flint steel
 
-esp.o: esp.c esp.h
-	$(CC) $(CFLAGS) -c -o esp.c $(LIBS)
+.c.o: 
+	$(CC) $(CFLAGS) -c -o $@ $< $(LIBS) $(INCLUDES) $(LDLAGS)
+
+flint: $(OBJS1)
+	$(CC) $(CFLAGS) -o $@ $(OBJS1)
+
+steel: $(OBJS2)
+	$(CC) $(CFLAGS) -o $@ $(OBJS2) $(LIBS) $(INCLUDES) $(LDLAGS)
 
 clean:
-	$(RM) *.o
+	$(RM) src/*.o
+
+

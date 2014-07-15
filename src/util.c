@@ -139,3 +139,14 @@ RDS_Command QueueDelete(RDS_Queue queue)
     queue->count--;
     return command;
 }
+
+int QueueEmpty(RDS_Queue queue)
+{
+    if ( queue->count==0 )
+    {
+        return 1;
+    } else 
+    {
+        return 0;
+    }
+}

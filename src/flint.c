@@ -144,6 +144,14 @@ int main(int argc, char**argv)
     uint32_t frameid=0;
     //uint32_t acks=0;
 
+    Clock flintClock;
+    Clock flintOffsetClock;
+    flintOffsetClock=initClock();
+    flintClock=getProgramClock(flintOffsetClock);
+
+
+    uint32_t testdata=0XABCDEF01;
+
     for(;;)
     {
         rv = poll(ufds, 2, 1);
@@ -164,13 +172,14 @@ int main(int argc, char**argv)
 
                 // Ensure to re write every field of espDataPacket or
                 // do sendpacket=data_ntoh(sendpacket) first.
-                
+                flintClock=getProgramClock(flintOffsetClock);
+
                 sendpacket.prot_header   = 0;
                 sendpacket.frameid       = frameid;
                 sendpacket.cmd           = 20;
-                sendpacket.data          = 0XABCDEF01;
-                sendpacket.ptime_sec     = 0;
-                sendpacket.ptime_usec    = 0;
+                sendpacket.data          = testdata;
+                sendpacket.ptime_sec     = flintClock.seconds;
+                sendpacket.ptime_usec    = flintClock.useconds;
                 sendpacket.clockadj_usec = 0;
 
                 //acks=0;
@@ -184,6 +193,7 @@ int main(int argc, char**argv)
                     exit(1);
                 }
                 frameid++;
+                testdata++;
 
                 }
             if (ufds[1].revents & POLLIN) // Recive Socket

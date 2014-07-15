@@ -67,8 +67,11 @@ int main(int argc, char **argv)
             case 'c': print_conditions();
         }
     
-    //Init GPIO
+    // UNCOMMENT TO FOR RDS COMMANDS TO WORK
     /*
+
+    //Init GPIO
+    
     if (gpioSetup() != OK)
     {
             dbgPrint(DBG_INFO, "gpioSetup failed. Exiting\n");
@@ -143,6 +146,19 @@ int main(int argc, char **argv)
     ufds[1].events = POLLIN; //| POLLPRI; // check for normal or out-of-band
     uint64_t loopcount=0;
 
+    Clock steelClock;
+    Clock steelOffsetClock;
+    steelOffsetClock=initClock();
+    steelClock=getProgramClock(steelOffsetClock);
+
+    // Create New Queue
+    RDS_Queue rdsqueue;
+    rdsqueue=QueueCreate();
+
+    // Create RDS Queue Command
+    RDS_Command recvcmd, sendcmd;
+
+
     for(;;)
     {
         rv = poll(ufds, 2, 1);
@@ -160,9 +176,15 @@ int main(int argc, char **argv)
             {
                 read(timerfd, &loopcount, sizeof(uint64_t)); // reset Timer
                 // Consume BUFFER AND Send RDS DATA
-    
+                // EXAMPLE RDS
+                if (!QueueEmpty(rdsqueue))
+                {
+                    sendcmd=QueueDelete(rdsqueue);
+                }
+                //LS_CMD(sendcmd.cmd,sendcmd.data,0);
 
-                //printf("PlaceHolderfor RDS COMMANDS %d\n",tick);
+
+                printf("RDS COMMAND %u RDS DATA %08X\n",sendcmd.cmd,sendcmd.data);
                 tick++;
             }
 
@@ -172,11 +194,13 @@ int main(int argc, char **argv)
                 if (recvlen > 0)
                 {
                     recvpacket=data_ntoh(recvpacket);
+                    printf("RECV Packet FrameID=  %d\n",recvpacket.frameid);
                     Print_espDataPacket(recvpacket);
                 } else 
                 {
                     printf("uh oh - something went wrong!\n");
                 }
+                steelClock=getProgramClock(steelOffsetClock);
                 // Send Acks..........
                 lastFrameID=currentFrameID;
                 currentFrameID=recvpacket.frameid;
@@ -184,8 +208,8 @@ int main(int argc, char **argv)
                 sendpacket.frameid      = recvpacket.frameid;
                 sendpacket.ptime_sec    = recvpacket.ptime_sec;
                 sendpacket.ptime_usec   = recvpacket.ptime_usec;
-                sendpacket.acktime_sec  = 0;
-                sendpacket.acktime_usec = 0;
+                sendpacket.acktime_sec  = steelClock.seconds;
+                sendpacket.acktime_usec = steelClock.useconds;
 
 
                 // Ack Bitfield
@@ -211,6 +235,12 @@ int main(int argc, char **argv)
                 {
                 perror("sendto");
                 }
+                recvcmd.cmd=recvpacket.cmd;
+                recvcmd.data=recvpacket.data;
+                QueueEnter(rdsqueue,recvcmd);
+                // Enter RDS CMD INTO QUEUE
+
+
             }
         }
     } 

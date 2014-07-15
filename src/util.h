@@ -44,5 +44,5 @@ RDS_Queue QueueCreate(void);
 void QueueEnter(RDS_Queue queue, RDS_Command command);
 RDS_Command QueueDelete(RDS_Queue queue);
 void QueueInsert(RDS_Queue queue, RDS_Command, int);
-
+int QueueEmpty(RDS_Queue queue);
 #endif
