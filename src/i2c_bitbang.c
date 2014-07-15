@@ -25,7 +25,7 @@
 #include "i2c_bitbang.h"
 
 // clock speed in Hz
-#define I2CSPEED 2500
+#define I2CSPEED 2000
 #define SCL_PIN 3
 #define SDA_PIN 2 
 

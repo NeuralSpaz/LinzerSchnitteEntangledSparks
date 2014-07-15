@@ -18,3 +18,6 @@ The DATA0X fields are interpreted as bitmasks, e.g. 0x00000080 == 00000000 00000
 
 
 I2C Bus Speed may need to be adjusted down if arbitration fails.
+
+
+UDP non blocking socket

@@ -1,31 +1,25 @@
 # build executable
 CC = gcc
-CFLAGS = -Werror
-LIBS+=-lm
-LIBS2+= -Igpio/include -Lgpio/library -lrpigpio
-all: steel flint
+CFLAGS= -Wall -Werror -O2
+LIBS = -lrpigpio
+INCLUDES = -Isrc/gpio/include -Lsrc/gpio/library
+LDFLAGS= -Lsrc/gpio/library 
+SRCDIR=src
+OBJS1=$(addprefix $(SRCDIR)/,util.o esp.o esp_time.o udp.o flint.o)
+OBJS2=$(addprefix $(SRCDIR)/,util.o esp.o esp_time.o udp.o steel.o i2c_bitbang.o)
 
-flint: flint.o sparkfunc.o
-	$(CC) $(CFLAGS) -o flint flint.o sparkfunc.o  $(LIBS)
+all: flint steel
 
-flint.o: flint.c sparkfunc.h
-	$(CC) $(CFLAGS) -c -o flint.o flint.c $(LIBS)
+.c.o: 
+	$(CC) $(CFLAGS) -c -o $@ $< $(LIBS) $(INCLUDES) $(LDLAGS)
 
-sparkfunc.o: sparkfunc.c sparkfunc.h
-	$(CC) $(CFLAGS) -c -o sparkfunc.o sparkfunc.c $(LIBS)
+flint: $(OBJS1)
+	$(CC) $(CFLAGS) -o $@ $(OBJS1)
 
-steel: steel.o sparkfunc.o i2c_bitbang.o i2c_bitbang.o
-	$(CC) $(CFLAGS) -o steel steel.o sparkfunc.o i2c_bitbang.o $(LIBS2) $(LIBS)
-
-steel.o: steel.c sparkfunc.h i2c_bitbang.h 
-	$(CC) $(CFLAGS) -c -o steel.o steel.c $(LIBS2) $(LIBS)
-
-i2c_bitbang.o: i2c_bitbang.c i2c_bitbang.h
-	./make-rPi-GPIO.sh
-	$(CC) $(CFLAGS) -c -o i2c_bitbang.o i2c_bitbang.c $(LIBS2) $(LIBS)
-
+steel: $(OBJS2)
+	$(CC) $(CFLAGS) -o $@ $(OBJS2) $(LIBS) $(INCLUDES) $(LDLAGS)
 
 clean:
-	$(RM) *.o
-	$(RM) flint
-	$(RM) steel
+	$(RM) src/*.o
+
+
