@@ -6,15 +6,15 @@ LIBS2+= -Igpio/include -Lgpio/library -lrpigpio
 
 all: tests.o esp.o util.o esp_time.o udp.o flint.o steel.o i2c_bitbang.o
 	$(CC) $(CFLAGS) -o tests tests.o esp.o util.o esp_time.o udp.o $(LIBS)
-	$(CC) -o flint flint.o esp.o util.o esp_time.o udp.o $(LIBS)
-	$(CC) -o steel steel.o esp.o util.o esp_time.o udp.o i2c_bitbang.o $(LIBS) $(LIBS2)
+	$(CC) $(CFLAGS) -o flint flint.o esp.o util.o esp_time.o udp.o $(LIBS)
+	$(CC) $(CFLAGS) -o steel steel.o esp.o util.o esp_time.o udp.o i2c_bitbang.o $(LIBS) $(LIBS2)
 
 
 flint.o: flint.c
 	$(CC) $(CFLAGS) -c -o flint.o flint.c $(LIBS)
 
 steel.o: steel.c
-	$(CC) -c -o steel.o steel.c $(LIBS) $(LIBS2)
+	$(CC) $(CFLAGS) -c -o steel.o steel.c $(LIBS) $(LIBS2)
 
 tests.o: tests.c
 	$(CC) $(CFLAGS) -c -o tests.o tests.c $(LIBS)

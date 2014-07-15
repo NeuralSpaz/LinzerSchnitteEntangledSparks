@@ -50,10 +50,6 @@ int main(int argc, char **argv)
 {
     print_greating(); // Prints greating
 
-
-
-    
-
     Clock ProcessClock; 
     Clock offSetClock;
 
@@ -145,7 +141,6 @@ int main(int argc, char **argv)
     timspec.it_value.tv_nsec =1;
 
     int timerfd = timerfd_create(CLOCK_MONOTONIC,0);
-<<<<<<< HEAD
     int timer1=timerfd_settime(timerfd, 0, &timspec, 0);
 
     struct pollfd ufds[2];
@@ -236,108 +231,6 @@ int main(int argc, char **argv)
     } 
 
     return 0;
-=======
-	int timer1=timerfd_settime(timerfd, 0, &timspec, 0);
-
-	struct pollfd ufds[2];
-	ufds[0].fd = timerfd;
-	ufds[0].events = POLLIN; //| POLLPRI; // check for normal or out-of-band
-
-	ufds[1].fd = recvsocket;
-	ufds[1].events = POLLIN; //| POLLPRI; // check for normal or out-of-band
-	uint64_t loopcount=0;
-	uint32_t data01 = 0X00000001;
-	uint32_t data02 = 0X00000001;
-	uint32_t data03 = 0X00000001;
-	uint32_t data04 = 0X00000001;
-	uint32_t last_data01;
-	uint32_t last_data02;
-	uint32_t last_data03;
-	uint32_t last_data04;
-	
-	for(;;)
-   	{
-   		rv = poll(ufds, 2, 1);
-    	//tick++;
-    	if (rv == -1) 
-    	{
-   			perror("poll"); // error occurred in poll()
-		} else if (rv == 0) 
-		{
-			// Do Nothing
-
-		} else 
-		{
-    		if (ufds[0].revents & POLLIN) 
-    		{
-    			read(timerfd, &loopcount, sizeof(uint64_t)); // reset Timer
-    			// Consume BUFFER AND Send RDS DATA
-    			if(data01!=last_data01) 
-    			{
-    				LS_RAW2((int)20,(uint32_t)data01,0); 
-    				last_data01=data01; 
-    				fprintf(stderr,"CMD 20 %08X\n",data01);
-    			}
-
-    			printf("Ticks %d\n",tick);
-    			tick++;
-    			data01=tick;
-    			//data02=tick;
-    			//data03=tick;
-    			//data04=tick;
-
-    		}
-
-    		if (ufds[1].revents & POLLIN) 
-    		{
-				recvlen = recvfrom(recvsocket, &recvpacket, sizeof(espDataPacket), 0, (struct sockaddr *)&remaddr, &addrlen);
-				if (recvlen > 0)
-				{
-					recvpacket=data_ntoh(recvpacket);
-					bufferposition = recvpacket.frameid % BUFFERSIZE;
-					recvbuffer[bufferposition]=recvpacket; // puts recived packet into buffer
-					printf("Got Packet!\n");
-				} else 
-				{
-					printf("uh oh - something went wrong!\n");
-				}
-				// Send Acks..........
-				lastFrameID=currentFrameID;
-				currentFrameID=recvpacket.frameid;
-				sendpacket.frameid 		= recvpacket.frameid;
-				sendpacket.ptime_sec  	= recvpacket.ptime_sec;
-				sendpacket.ptime_usec 	= recvpacket.ptime_usec;
-				sendpacket.acktime_sec	= ProcessClock.seconds;
-				sendpacket.acktime_usec	= ProcessClock.useconds;
-				// Ack Bitfield
-				if ( (currentFrameID-lastFrameID)>0 )
-				{
-					acks <<= (currentFrameID-lastFrameID);
-					acks |= acks_wrap_buffer>> (BUFFERSIZE-(currentFrameID-lastFrameID));
-					acks_wrap_buffer <<= (currentFrameID-lastFrameID);
-					acks |= 1;
-					sendpacket.acks=acks;
-				} else if ( (currentFrameID-lastFrameID)<0 )
-				{
-					acks_wrap_buffer >>= (lastFrameID-currentFrameID) ;
-					acks_wrap_buffer |= (acks<<(BUFFERSIZE-(lastFrameID-currentFrameID)));
-					acks >>= (lastFrameID-currentFrameID);
-					acks |= 0xFFFFFFFF<<(BUFFERSIZE-(lastFrameID-currentFrameID));
-					acks |= 1;
-					sendpacket.acks=acks;
-				}
-				// Send ACK Packet			
-				sendpacket=ack_hton(sendpacket);
-				if (sendto(recvsocket, &sendpacket, sizeof(espAckPacket), 0, (struct sockaddr *)&remaddr, addrlen) < 0)
-				{
-				perror("sendto");
-				}
-			}
-		}
-	} 
-
-	return 0;
->>>>>>> 33ad199e10dc51b0b6d8b07b08ad98ff827470d2
 }
 
 

@@ -68,7 +68,7 @@ int main (void)
     int i;
     for (i=0; i<128 ; i++)
     {
-        newCommand.prefix=20 + (i%4);
+        newCommand.cmd=20 + (i%4);
         newCommand.data=i;
         QueueEnter(q1,newCommand);
     }
@@ -77,7 +77,7 @@ int main (void)
     for (i=0; i<128; i++ )
     {
         oldComand=QueueDelete(q1);
-        printf("From Queue: Prefix: %d, Data: %d \n",oldComand.prefix,oldComand.data);
+        printf("From Queue: Prefix: %d, Data: %d \n",oldComand.cmd,oldComand.data);
     }
 
     for (i=0; i<128 ; i++)
